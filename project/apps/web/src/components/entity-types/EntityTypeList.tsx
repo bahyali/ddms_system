@@ -21,7 +21,7 @@ export const EntityTypeList = ({ entityTypes }: EntityTypeListProps) => {
             <br />
             <small>Key: <code>{et.key}</code></small>
           </div>
-          <Link href={`/admin/entity-types/${et.id}/edit`}>Edit</Link>
+          <Link href={`/admin/entity-types/${et.id}`}>Manage</Link>
         </li>
       ))}
     </ul>
