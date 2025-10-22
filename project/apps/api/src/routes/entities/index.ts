@@ -109,12 +109,43 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const { entityType } = request;
+      const { entityType, fieldDefs } = request;
       const { filter, sort, limit = 50, cursor } = request.body;
 
+      if (sort && sort.length > 1) {
+        // For now, we only support sorting by one field as per the DAL.
+        return reply.code(400).send({
+          code: 'BAD_REQUEST',
+          message: 'Sorting by multiple fields is not currently supported.',
+        });
+      }
+
+      if (sort && sort.length > 0) {
+        const sortableFields = new Set([
+          'id',
+          'version',
+          'createdAt',
+          'updatedAt',
+          'createdBy',
+          'updatedBy',
+          ...fieldDefs.map((f) => f.key),
+        ]);
+        if (!sortableFields.has(sort[0].field)) {
+          return reply.code(400).send({
+            code: 'BAD_REQUEST',
+            message: `Invalid sort field: ${sort[0].field}`,
+          });
+        }
+      }
+
       const compiled = compileFilter(filter);
+      // This is a workaround to convert a parameterized SQL string with $1, $2 placeholders
+      // into a Drizzle `SQL` object, which the `sql` template literal function provides.
       const chunks = compiled.sql.split(/\$\d+/);
-      const filterSql = sql(chunks as any, ...compiled.params);
+      const template: TemplateStringsArray = Object.assign(chunks, {
+        raw: chunks,
+      });
+      const filterSql = sql(template, ...compiled.params);
 
       const offset = cursor
         ? parseInt(Buffer.from(cursor, 'base64').toString('ascii'), 10)
@@ -126,7 +157,7 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
         entityType.id,
         {
           filter: filterSql,
-          sort: sort?.[0] as any, // DAL currently supports one sort field
+          sort: sort?.[0],
           pagination: { limit, offset },
         },
       );

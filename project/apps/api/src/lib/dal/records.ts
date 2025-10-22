@@ -17,7 +17,7 @@ export interface SearchOptions {
   /** The compiled WHERE clause from the Filter DSL Compiler */
   filter: SQL;
   /** Sorting options */
-  sort?: { field: keyof Record; direction: 'asc' | 'desc' };
+  sort?: { field: string; direction: 'asc' | 'desc' };
   /** Pagination options */
   pagination: { limit: number; offset: number };
 }
@@ -132,10 +132,32 @@ export async function searchRecords(
     .where(and(...conditions));
 
   if (options.sort) {
-    const sortColumn = schema.records[options.sort.field];
-    if (sortColumn) {
-      const direction = options.sort.direction === 'asc' ? asc : desc;
-      query = query.orderBy(direction(sortColumn));
+    const direction = options.sort.direction === 'asc' ? asc : desc;
+    const sortField = options.sort.field;
+
+    // A set of top-level fields that are valid for sorting
+    const topLevelSortableFields: Set<string> = new Set([
+      'id',
+      'version',
+      'createdAt',
+      'updatedAt',
+      'createdBy',
+      'updatedBy',
+    ]);
+
+    let sortExpression;
+
+    if (topLevelSortableFields.has(sortField)) {
+      sortExpression =
+        schema.records[sortField as keyof typeof schema.records];
+    } else {
+      // Assume it's a key in the 'data' JSONB field.
+      // The route handler should validate this against fieldDefs to prevent SQL injection.
+      sortExpression = sql`(${schema.records.data} ->> ${sortField})`;
+    }
+
+    if (sortExpression) {
+      query = query.orderBy(direction(sortExpression));
     }
   }
 
