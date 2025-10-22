@@ -180,7 +180,9 @@ export const recordVersions = pgTable('record_versions', {
  */
 export const auditLog = pgTable('audit_log', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
-  tenantId: uuid('tenant_id').notNull(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => tenants.id, { onDelete: 'cascade' }),
   actorId: uuid('actor_id'),
   action: text('action').notNull(),
   resourceType: text('resource_type').notNull(),

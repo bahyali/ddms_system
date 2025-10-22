@@ -1,0 +1,33 @@
+Scope: all 6 workspace projects
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│   Ignored build scripts: esbuild.                                            │
+│   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+│   to run scripts.                                                            │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Done in 267ms using pnpm v10.19.0
+
+> ddms@1.0.0 test /Users/bahy/Documents/playground/capstone_project/server/projects/zentio_challenge/project
+> pnpm --parallel run test
+
+Scope: 5 of 6 workspace projects
+apps/api test$ echo "@ddms/api: no test specified" && exit 0
+apps/web test$ echo "@ddms/web: no test specified" && exit 0
+packages/core test$ echo "@ddms/core: no test specified" && exit 0
+packages/db test$ echo "@ddms/db: no test specified" && exit 0
+packages/sdk test$ echo "@ddms/sdk: no test specified" && exit 0
+apps/api test: @ddms/api: no test specified
+apps/web test: @ddms/web: no test specified
+apps/api test: Done
+packages/core test: @ddms/core: no test specified
+packages/db test: @ddms/db: no test specified
+apps/web test: Done
+packages/db test: Done
+packages/core test: Done
+packages/sdk test: @ddms/sdk: no test specified
+packages/sdk test: Done
