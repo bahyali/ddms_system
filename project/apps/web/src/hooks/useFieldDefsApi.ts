@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '~/lib/api';
 import type { components } from '@ddms/sdk';
 
-type FieldDef = components['schemas']['FieldDef'];
 type FieldDefCreate = components['schemas']['FieldDefCreate'];
 type FieldDefUpdate = components['schemas']['FieldDefUpdate'];
 
@@ -63,7 +62,7 @@ export const useUpdateFieldDef = (entityTypeId: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (_data, _variables) => {
       queryClient.invalidateQueries({ queryKey: fieldDefsKeys.lists(entityTypeId) });
     },
   });
