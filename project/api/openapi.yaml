@@ -1,0 +1,453 @@
+openapi: '3.0.3'
+info:
+  title: 'Dynamic Data Management System API'
+  description: 'API for managing dynamic entities, fields, records, and relationships.'
+  version: '1.0.0'
+servers:
+  - url: '/api/v1'
+    description: 'API v1'
+
+tags:
+  - name: Metadata
+    description: 'Operations for managing Entity Types and Field Definitions.'
+
+paths:
+  /entity-types:
+    get:
+      tags:
+        - Metadata
+      summary: 'List Entity Types'
+      description: 'Retrieves a list of all entity types for the tenant.'
+      operationId: 'listEntityTypes'
+      responses:
+        '200':
+          description: 'A list of entity types.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EntityType'
+    post:
+      tags:
+        - Metadata
+      summary: 'Create Entity Type'
+      description: 'Creates a new entity type.'
+      operationId: 'createEntityType'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntityTypeCreate'
+      responses:
+        '201':
+          description: 'Entity type created successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityType'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /entity-types/{entityTypeId}:
+    patch:
+      tags:
+        - Metadata
+      summary: 'Update Entity Type'
+      description: 'Updates an existing entity type.'
+      operationId: 'updateEntityType'
+      parameters:
+        - $ref: '#/components/parameters/entityTypeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntityTypeUpdate'
+      responses:
+        '200':
+          description: 'Entity type updated successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityType'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /entity-types/{entityTypeId}/fields:
+    get:
+      tags:
+        - Metadata
+      summary: 'List Field Definitions'
+      description: 'Retrieves a list of all field definitions for a given entity type.'
+      operationId: 'listFieldDefs'
+      parameters:
+        - $ref: '#/components/parameters/entityTypeId'
+      responses:
+        '200':
+          description: 'A list of field definitions.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FieldDef'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Metadata
+      summary: 'Create Field Definition'
+      description: 'Creates a new field definition for an entity type.'
+      operationId: 'createFieldDef'
+      parameters:
+        - $ref: '#/components/parameters/entityTypeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldDefCreate'
+      responses:
+        '201':
+          description: 'Field definition created successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldDef'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /fields/{fieldId}:
+    patch:
+      tags:
+        - Metadata
+      summary: 'Update Field Definition'
+      description: 'Updates an existing field definition.'
+      operationId: 'updateFieldDef'
+      parameters:
+        - $ref: '#/components/parameters/fieldId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldDefUpdate'
+      responses:
+        '200':
+          description: 'Field definition updated successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldDef'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    entityTypeId:
+      name: entityTypeId
+      in: path
+      required: true
+      description: 'The ID of the entity type.'
+      schema:
+        type: string
+        format: uuid
+    fieldId:
+      name: fieldId
+      in: path
+      required: true
+      description: 'The ID of the field definition.'
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: 'Bad Request - The request body is invalid.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: 'Not Found - The requested resource does not exist.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # Entity Type Schemas
+    EntityType:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        key:
+          type: string
+          description: 'A unique machine-readable key for the entity type (e.g., "user", "project").'
+        label:
+          type: string
+          description: 'A human-readable label for the entity type (e.g., "User", "Project").'
+        description:
+          type: string
+          nullable: true
+          description: 'A description of the entity type.'
+      required:
+        - id
+        - key
+        - label
+
+    EntityTypeCreate:
+      type: object
+      properties:
+        key:
+          type: string
+          description: 'A unique machine-readable key for the entity type (e.g., "user", "project").'
+        label:
+          type: string
+          description: 'A human-readable label for the entity type (e.g., "User", "Project").'
+        description:
+          type: string
+          nullable: true
+          description: 'A description of the entity type.'
+      required:
+        - key
+        - label
+
+    EntityTypeUpdate:
+      type: object
+      properties:
+        label:
+          type: string
+          description: 'A human-readable label for the entity type (e.g., "User", "Project").'
+        description:
+          type: string
+          nullable: true
+          description: 'A description of the entity type.'
+
+    # Field Definition Schemas
+    FieldDef:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        entityTypeId:
+          type: string
+          format: uuid
+          readOnly: true
+        key:
+          type: string
+          description: 'A unique machine-readable key for the field (e.g., "status", "budget").'
+        label:
+          type: string
+          description: 'A human-readable label for the field (e.g., "Status", "Budget").'
+        kind:
+          type: string
+          enum: [text, number, date, select, relation, boolean]
+        required:
+          type: boolean
+          default: false
+        uniqueWithinType:
+          type: boolean
+          default: false
+        searchable:
+          type: boolean
+          default: true
+        indexed:
+          type: boolean
+          default: false
+        options:
+          $ref: '#/components/schemas/FieldDefOptions'
+        validate:
+          $ref: '#/components/schemas/FieldDefValidate'
+        acl:
+          $ref: '#/components/schemas/FieldDefAcl'
+        position:
+          type: integer
+          default: 0
+        active:
+          type: boolean
+          default: true
+      required:
+        - id
+        - entityTypeId
+        - key
+        - label
+        - kind
+
+    FieldDefCreate:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        kind:
+          type: string
+          enum: [text, number, date, select, relation, boolean]
+        required:
+          type: boolean
+        uniqueWithinType:
+          type: boolean
+        searchable:
+          type: boolean
+        indexed:
+          type: boolean
+        options:
+          $ref: '#/components/schemas/FieldDefOptions'
+        validate:
+          $ref: '#/components/schemas/FieldDefValidate'
+        acl:
+          $ref: '#/components/schemas/FieldDefAcl'
+        position:
+          type: integer
+      required:
+        - key
+        - label
+        - kind
+
+    FieldDefUpdate:
+      type: object
+      properties:
+        label:
+          type: string
+        required:
+          type: boolean
+        uniqueWithinType:
+          type: boolean
+        searchable:
+          type: boolean
+        indexed:
+          type: boolean
+        options:
+          $ref: '#/components/schemas/FieldDefOptions'
+        validate:
+          $ref: '#/components/schemas/FieldDefValidate'
+        acl:
+          $ref: '#/components/schemas/FieldDefAcl'
+        position:
+          type: integer
+        active:
+          type: boolean
+
+    FieldDefOptions:
+      type: object
+      properties:
+        enum:
+          type: array
+          items:
+            type: string
+          description: 'For kind="select". A list of possible values.'
+        multiselect:
+          type: boolean
+          description: 'For kind="select". Whether multiple values can be selected.'
+        relation:
+          type: object
+          description: 'For kind="relation". Defines the relationship target.'
+          properties:
+            targetEntityTypeId:
+              type: string
+              format: uuid
+            cardinality:
+              type: string
+              enum: [one, many]
+          required:
+            - targetEntityTypeId
+            - cardinality
+
+    FieldDefValidate:
+      type: object
+      description: 'Validation rules that depend on the field kind.'
+      properties:
+        text:
+          type: object
+          properties:
+            minLen:
+              type: integer
+            maxLen:
+              type: integer
+            regex:
+              type: string
+        number:
+          type: object
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+            integer:
+              type: boolean
+        date:
+          type: object
+          properties:
+            min:
+              type: string
+              format: date
+            max:
+              type: string
+              format: date
+
+    FieldDefAcl:
+      type: object
+      description: 'Access control list defining roles for read/write access.'
+      properties:
+        read:
+          type: array
+          items:
+            type: string
+        write:
+          type: array
+          items:
+            type: string
+
+    # Error Schema
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 'A machine-readable error code.'
+          example: 'VALIDATION_ERROR'
+        message:
+          type: string
+          description: 'A human-readable error message.'
+          example: 'The request body is invalid.'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationErrorDetail'
+      required:
+        - code
+        - message
+
+    ValidationErrorDetail:
+      type: object
+      properties:
+        path:
+          type: string
+          description: 'The path to the invalid field in the request body.'
+          example: 'budget'
+        code:
+          type: string
+          description: 'A machine-readable code for the specific validation error.'
+          example: 'too_small'
+        message:
+          type: string
+          description: 'A human-readable message for the specific validation error.'
+          example: 'The budget must be at least 0.'
+      required:
+        - path
+        - code
+        - message
