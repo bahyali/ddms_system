@@ -8,6 +8,7 @@ import {
 import dbPlugin from './plugins/db';
 import healthRoutes from './routes/health';
 import metadataRoutes from './routes/metadata';
+import tenantContextPlugin from './plugins/tenant_context';
 
 export async function buildServer() {
   const server = fastify({
@@ -26,6 +27,7 @@ export async function buildServer() {
 
   await server.register(cors);
   await server.register(dbPlugin);
+  await server.register(tenantContextPlugin);
   await server.register(healthRoutes);
   await server.register(metadataRoutes, { prefix: '/api/v1' });
 
