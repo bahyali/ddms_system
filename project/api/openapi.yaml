@@ -366,6 +366,20 @@ components:
           required:
             - targetEntityTypeId
             - cardinality
+        formula:
+          type: string
+          description: 'For computed fields. An expression to calculate the field value.'
+          example: 'price * qty'
+        visibleIf:
+          type: array
+          items:
+            type: object
+          description: 'Conditional visibility rules for the UI.'
+        requiredIf:
+          type: array
+          items:
+            type: object
+          description: 'Conditional requirement rules.'
 
     FieldDefValidate:
       type: object
@@ -424,6 +438,10 @@ components:
           type: string
           description: 'A human-readable error message.'
           example: 'The request body is invalid.'
+        requestId:
+          type: string
+          format: uuid
+          description: 'A unique identifier for the request, useful for tracing.'
         errors:
           type: array
           items:
