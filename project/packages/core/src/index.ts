@@ -1,0 +1,1 @@
+export const core = () => 'Hello from @ddms/core';

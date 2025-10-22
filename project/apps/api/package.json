@@ -1,5 +1,15 @@
 {
   "name": "@ddms/api",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "lint": "eslint src --ext .ts",
+    "test": "echo \"@ddms/api: no test specified\" && exit 0"
+  },
+  "dependencies": {
+    "@ddms/core": "workspace:*",
+    "@ddms/db": "workspace:*",
+    "@ddms/sdk": "workspace:*"
+  }
 }

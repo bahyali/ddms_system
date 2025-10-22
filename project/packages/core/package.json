@@ -1,4 +1,11 @@
 {
   "name": "@ddms/core",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "lint": "eslint src --ext .ts",
+    "test": "echo \"@ddms/core: no test specified\" && exit 0"
+  }
 }

@@ -1,0 +1,1 @@
+export const sdk = () => 'Hello from @ddms/sdk';

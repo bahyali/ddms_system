@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "description": "Dynamic Data Management System",
+  "packageManager": "pnpm@10.19.0",
   "scripts": {
-    "dev": "pnpm --parallel --stream run dev",
     "build": "pnpm --filter \"./packages/**\" run build",
+    "dev": "pnpm --parallel --stream run dev",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "lint": "pnpm --parallel run lint",
     "test": "pnpm --parallel run test"
   },
@@ -13,6 +15,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "@typescript-eslint/eslint-plugin": "^7.14.1",
+    "@typescript-eslint/parser": "^7.14.1",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.2",
+    "tsx": "^4.15.7",
+    "typescript": "^5.4.5"
   }
 }

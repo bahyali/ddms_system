@@ -1,5 +1,13 @@
 {
   "name": "@ddms/web",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "scripts": {
+    "dev": "echo \"@ddms/web: no dev script specified\" && exit 0",
+    "lint": "eslint src --ext .ts,.tsx",
+    "test": "echo \"@ddms/web: no test specified\" && exit 0"
+  },
+  "dependencies": {
+    "@ddms/sdk": "workspace:*"
+  }
 }
