@@ -1,0 +1,18 @@
+{
+  "name": "ddms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dynamic Data Management System",
+  "scripts": {
+    "dev": "pnpm --parallel --stream run dev",
+    "build": "pnpm --filter \"./packages/**\" run build",
+    "lint": "pnpm --parallel run lint",
+    "test": "pnpm --parallel run test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
