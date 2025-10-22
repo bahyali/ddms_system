@@ -76,7 +76,10 @@ export default function App({ Component, pageProps }: AppProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000,
+            // It's beneficial to have a short staleTime when using SSE
+            // so that manual refetches also get fresh data, but invalidations
+            // will trigger refetches regardless of staleTime.
+            staleTime: 5 * 1000, // 5 seconds
           },
         },
       })
