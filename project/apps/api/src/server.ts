@@ -45,7 +45,12 @@ export async function buildServer() {
     try {
       await request.jwtVerify();
       // The raw payload from jwtVerify is attached to request.user
-      const payload = request.user as any;
+      interface JwtPayload {
+        sub: string;
+        roles: string[];
+        tenant_id: string;
+      }
+      const payload = request.user as JwtPayload;
       // We remap it to our desired structure
       request.user = {
         id: payload.sub,

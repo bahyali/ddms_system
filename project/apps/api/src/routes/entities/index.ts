@@ -86,20 +86,6 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const { entityType, fieldDefs, user } = request;
-
-      const forbiddenFields = checkWritePermissions(
-        user,
-        fieldDefs,
-        request.body.data,
-      );
-      if (forbiddenFields.length > 0) {
-        return reply.code(403).send({
-          code: 'FORBIDDEN',
-          message: `You do not have permission to write to the following fields: ${forbiddenFields.join(
-            ', ',
-          )}`,
-        });
-      }
       const validationSchema = getValidationSchema(entityType.id, fieldDefs);
       const validationResult = validationSchema.safeParse(request.body.data);
 
@@ -136,28 +122,14 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      if (!hasPermission(request.user, 'record:create')) {
+      if (!hasPermission(request.user, 'record:read')) {
         return reply.code(403).send({
           code: 'FORBIDDEN',
-          message: 'You do not have permission to create records.',
+          message: 'You do not have permission to search records.',
         });
       }
 
-      const { entityType, fieldDefs, user } = request;
-
-      const forbiddenFields = checkWritePermissions(
-        user,
-        fieldDefs,
-        request.body.data,
-      );
-      if (forbiddenFields.length > 0) {
-        return reply.code(403).send({
-          code: 'FORBIDDEN',
-          message: `You do not have permission to write to the following fields: ${forbiddenFields.join(
-            ', ',
-          )}`,
-        });
-      }
+      const { entityType, fieldDefs } = request;
       const { filter, sort, limit = 50, cursor } = request.body;
 
       if (sort && sort.length > 1) {
@@ -199,7 +171,7 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
         ? parseInt(Buffer.from(cursor, 'base64').toString('ascii'), 10)
         : 0;
 
-      let { rows, total } = await recordDal.searchRecords(
+      const searchResult = await recordDal.searchRecords(
         request.db,
         request.tenantId,
         entityType.id,
@@ -209,6 +181,8 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
           pagination: { limit, offset },
         },
       );
+      let rows = searchResult.rows;
+      const total = searchResult.total;
 
       const nextCursor =
         offset + rows.length < total
@@ -235,6 +209,12 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
+      if (!hasPermission(request.user, 'record:read')) {
+        return reply.code(403).send({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to view this record.',
+        });
+      }
       const { recordId } = request.params;
       const record = await recordDal.findRecordById(
         request.db,
