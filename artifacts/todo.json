@@ -1,0 +1,1095 @@
+[
+    {
+        "name": "I1.T1",
+        "context": {
+            "task_id": "I1.T1",
+            "iteration_id": "I1",
+            "iteration_goal": "Establish the project structure, define the complete database schema with migrations, set up the local development environment, and generate core architectural diagrams.",
+            "description": "Initialize the pnpm monorepo workspace with the directory structure defined in Section 3. Set up base TypeScript configurations (`tsconfig.base.json`).",
+            "agent_type_hint": "SetupAgent",
+            "inputs": "Section 3 (Directory Structure)",
+            "target_files": [
+                "package.json",
+                "pnpm-workspace.yaml",
+                "tsconfig.base.json",
+                "apps/",
+                "packages/"
+            ],
+            "input_files": [],
+            "deliverables": "An initialized monorepo with placeholder `package.json` files in each app/package.",
+            "acceptance_criteria": "The directory structure matches the plan. `pnpm install` runs successfully at the root.",
+            "dependencies": [],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I1",
+        "completed": false,
+        "target_files": [
+            "package.json",
+            "pnpm-workspace.yaml",
+            "tsconfig.base.json",
+            "apps/",
+            "packages/"
+        ],
+        "input_files": [],
+        "files": []
+    },
+    {
+        "name": "I1.T2",
+        "context": {
+            "task_id": "I1.T2",
+            "iteration_id": "I1",
+            "iteration_goal": "Establish the project structure, define the complete database schema with migrations, set up the local development environment, and generate core architectural diagrams.",
+            "description": "Set up the `packages/db` package with Drizzle ORM. Define the full database schema in TypeScript based on the DDL provided in the manifest (tables: `tenants`, `entity_types`, `field_defs`, `records`, `edges`, `record_versions`, `audit_log`).",
+            "agent_type_hint": "DatabaseAgent",
+            "inputs": "Section 6 of the manifest (Data Model DDL)",
+            "target_files": [
+                "packages/db/src/schema.ts"
+            ],
+            "input_files": [
+                "packages/db/"
+            ],
+            "deliverables": "A TypeScript file containing the Drizzle schema definitions for all tables.",
+            "acceptance_criteria": "The Drizzle schema correctly represents all tables, columns, types, and relations from the manifest's DDL. The code is type-correct.",
+            "dependencies": [
+                "I1.T1"
+            ],
+            "parallelizable": true
+        },
+        "output": null,
+        "iteration_id": "I1",
+        "completed": false,
+        "target_files": [
+            "packages/db/src/schema.ts"
+        ],
+        "input_files": [
+            "packages/db/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I1.T3",
+        "context": {
+            "task_id": "I1.T3",
+            "iteration_id": "I1",
+            "iteration_goal": "Establish the project structure, define the complete database schema with migrations, set up the local development environment, and generate core architectural diagrams.",
+            "description": "Generate the initial SQL migration files from the Drizzle schema defined in `I1.T2`.",
+            "agent_type_hint": "DatabaseAgent",
+            "inputs": "Drizzle schema from `I1.T2`.",
+            "target_files": [
+                "packages/db/migrations/0000_*.sql"
+            ],
+            "input_files": [
+                "packages/db/src/schema.ts"
+            ],
+            "deliverables": "SQL migration files.",
+            "acceptance_criteria": "The generated migration files accurately reflect the schema and can be applied to a clean PostgreSQL database without errors.",
+            "dependencies": [
+                "I1.T2"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I1",
+        "completed": false,
+        "target_files": [
+            "packages/db/migrations/0000_*.sql"
+        ],
+        "input_files": [
+            "packages/db/src/schema.ts"
+        ],
+        "files": []
+    },
+    {
+        "name": "I1.T4",
+        "context": {
+            "task_id": "I1.T4",
+            "iteration_id": "I1",
+            "iteration_goal": "Establish the project structure, define the complete database schema with migrations, set up the local development environment, and generate core architectural diagrams.",
+            "description": "Create a `docker-compose.yml` file in the `infra/` directory to run a PostgreSQL 14+ instance for local development, including volume for data persistence.",
+            "agent_type_hint": "SetupAgent",
+            "inputs": "Section 5 of the manifest (Stack details)",
+            "target_files": [
+                "infra/docker-compose.yml"
+            ],
+            "input_files": [],
+            "deliverables": "A functional `docker-compose.yml` file.",
+            "acceptance_criteria": "`docker-compose up` successfully starts a PostgreSQL container.",
+            "dependencies": [
+                "I1.T1"
+            ],
+            "parallelizable": true
+        },
+        "output": null,
+        "iteration_id": "I1",
+        "completed": false,
+        "target_files": [
+            "infra/docker-compose.yml"
+        ],
+        "input_files": [],
+        "files": []
+    },
+    {
+        "name": "I1.T5",
+        "context": {
+            "task_id": "I1.T5",
+            "iteration_id": "I1",
+            "iteration_goal": "Establish the project structure, define the complete database schema with migrations, set up the local development environment, and generate core architectural diagrams.",
+            "description": "Generate a PlantUML Component Diagram for the Backend API based on the components described in Section 2 of this plan and Section 3.5 of the manifest's architecture blueprint.",
+            "agent_type_hint": "DiagrammingAgent",
+            "inputs": "Section 2 (Core Architecture), Manifest Architecture Blueprint (Section 3.5)",
+            "target_files": [
+                "docs/diagrams/backend_component_diagram.puml"
+            ],
+            "input_files": [],
+            "deliverables": "A PlantUML source file for the component diagram.",
+            "acceptance_criteria": "The diagram accurately visualizes the REST Controllers, Authorization Service, Validation Engine, Filter Compiler, Core Services, Index Manager, SSE Broadcaster, and DAL. The file renders correctly.",
+            "dependencies": [
+                "I1.T1"
+            ],
+            "parallelizable": true
+        },
+        "output": null,
+        "iteration_id": "I1",
+        "completed": false,
+        "target_files": [
+            "docs/diagrams/backend_component_diagram.puml"
+        ],
+        "input_files": [],
+        "files": []
+    },
+    {
+        "name": "I1.T6",
+        "context": {
+            "task_id": "I1.T6",
+            "iteration_id": "I1",
+            "iteration_goal": "Establish the project structure, define the complete database schema with migrations, set up the local development environment, and generate core architectural diagrams.",
+            "description": "Generate a Mermaid ERD for the database schema based on the DDL in Section 6 of the manifest.",
+            "agent_type_hint": "DiagrammingAgent",
+            "inputs": "Section 6 of the manifest (Data Model DDL)",
+            "target_files": [
+                "docs/diagrams/database_erd.md"
+            ],
+            "input_files": [],
+            "deliverables": "A Markdown file containing the Mermaid syntax for the ERD.",
+            "acceptance_criteria": "The ERD correctly shows all entities and their relationships as defined in the schema. The Mermaid syntax is valid.",
+            "dependencies": [
+                "I1.T1"
+            ],
+            "parallelizable": true
+        },
+        "output": null,
+        "iteration_id": "I1",
+        "completed": false,
+        "target_files": [
+            "docs/diagrams/database_erd.md"
+        ],
+        "input_files": [],
+        "files": []
+    },
+    {
+        "name": "I1.T7",
+        "context": {
+            "task_id": "I1.T7",
+            "iteration_id": "I1",
+            "iteration_goal": "Establish the project structure, define the complete database schema with migrations, set up the local development environment, and generate core architectural diagrams.",
+            "description": "Generate a PlantUML Sequence Diagram for the \"Record Search\" flow, as described in Section 3.7 of the manifest's architecture blueprint.",
+            "agent_type_hint": "DiagrammingAgent",
+            "inputs": "Manifest Architecture Blueprint (Section 3.7)",
+            "target_files": [
+                "docs/diagrams/record_search_sequence.puml"
+            ],
+            "input_files": [],
+            "deliverables": "A PlantUML source file for the sequence diagram.",
+            "acceptance_criteria": "The diagram accurately depicts the interaction between User, Frontend, API, Filter Compiler, DAL, and Database. The file renders correctly.",
+            "dependencies": [
+                "I1.T1"
+            ],
+            "parallelizable": true
+        },
+        "output": null,
+        "iteration_id": "I1",
+        "completed": false,
+        "target_files": [
+            "docs/diagrams/record_search_sequence.puml"
+        ],
+        "input_files": [],
+        "files": []
+    },
+    {
+        "name": "I2.T1",
+        "context": {
+            "task_id": "I2.T1",
+            "iteration_id": "I2",
+            "iteration_goal": "Implement the backend API server and the CRUD endpoints for managing `entity_types` and `field_defs`.",
+            "description": "Scaffold the Fastify API server in `apps/api`. Include basic setup for routing, plugins (e.g., CORS), structured logging (Pino), and database connection using Drizzle.",
+            "agent_type_hint": "BackendAgent",
+            "inputs": "Section 2 (Technology Stack)",
+            "target_files": [
+                "apps/api/src/server.ts",
+                "apps/api/src/plugins/",
+                "apps/api/src/routes/"
+            ],
+            "input_files": [
+                "apps/api/",
+                "packages/db/"
+            ],
+            "deliverables": "A runnable Fastify server that can connect to the database.",
+            "acceptance_criteria": "The server starts without errors. A basic health check endpoint (`/health`) returns 200 OK.",
+            "dependencies": [
+                "I1.T2",
+                "I1.T4"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I2",
+        "completed": false,
+        "target_files": [
+            "apps/api/src/server.ts",
+            "apps/api/src/plugins/",
+            "apps/api/src/routes/"
+        ],
+        "input_files": [
+            "apps/api/",
+            "packages/db/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I2.T2",
+        "context": {
+            "task_id": "I2.T2",
+            "iteration_id": "I2",
+            "iteration_goal": "Implement the backend API server and the CRUD endpoints for managing `entity_types` and `field_defs`.",
+            "description": "Create the initial OpenAPI v3 specification in `api/openapi.yaml`. Define the schemas and endpoints for managing `entity_types` and `field_defs` (GET, POST, PATCH).",
+            "agent_type_hint": "DocumentationAgent",
+            "inputs": "Section 9.1 of the manifest (Metadata API)",
+            "target_files": [
+                "api/openapi.yaml"
+            ],
+            "input_files": [],
+            "deliverables": "An OpenAPI YAML file.",
+            "acceptance_criteria": "The YAML file is syntactically valid and passes OpenAPI validation. It accurately defines the metadata endpoints.",
+            "dependencies": [],
+            "parallelizable": true
+        },
+        "output": null,
+        "iteration_id": "I2",
+        "completed": false,
+        "target_files": [
+            "api/openapi.yaml"
+        ],
+        "input_files": [],
+        "files": []
+    },
+    {
+        "name": "I2.T3",
+        "context": {
+            "task_id": "I2.T3",
+            "iteration_id": "I2",
+            "iteration_goal": "Implement the backend API server and the CRUD endpoints for managing `entity_types` and `field_defs`.",
+            "description": "Implement the Data Access Layer (DAL) functions within `apps/api` for CRUD operations on `entity_types` and `field_defs` using the Drizzle schema.",
+            "agent_type_hint": "BackendAgent",
+            "inputs": "Drizzle schema from `I1.T2`.",
+            "target_files": [
+                "apps/api/src/lib/dal/metadata.ts"
+            ],
+            "input_files": [
+                "packages/db/src/schema.ts",
+                "apps/api/src/"
+            ],
+            "deliverables": "TypeScript functions for interacting with metadata tables.",
+            "acceptance_criteria": "Functions are type-safe and correctly perform create, read, update operations.",
+            "dependencies": [
+                "I1.T2"
+            ],
+            "parallelizable": true
+        },
+        "output": null,
+        "iteration_id": "I2",
+        "completed": false,
+        "target_files": [
+            "apps/api/src/lib/dal/metadata.ts"
+        ],
+        "input_files": [
+            "packages/db/src/schema.ts",
+            "apps/api/src/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I2.T4",
+        "context": {
+            "task_id": "I2.T4",
+            "iteration_id": "I2",
+            "iteration_goal": "Implement the backend API server and the CRUD endpoints for managing `entity_types` and `field_defs`.",
+            "description": "Implement the Fastify routes and handlers for the `entity_types` and `field_defs` endpoints, using the DAL functions from `I2.T3` and validating requests against Zod schemas derived from the OpenAPI spec.",
+            "agent_type_hint": "BackendAgent",
+            "inputs": "OpenAPI spec from `I2.T2`, DAL from `I2.T3`.",
+            "target_files": [
+                "apps/api/src/routes/metadata/"
+            ],
+            "input_files": [
+                "api/openapi.yaml",
+                "apps/api/src/lib/dal/metadata.ts"
+            ],
+            "deliverables": "Implemented API routes for metadata.",
+            "acceptance_criteria": "Endpoints behave as specified in the OpenAPI document. Basic positive-path tests pass.",
+            "dependencies": [
+                "I2.T2",
+                "I2.T3"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I2",
+        "completed": false,
+        "target_files": [
+            "apps/api/src/routes/metadata/"
+        ],
+        "input_files": [
+            "api/openapi.yaml",
+            "apps/api/src/lib/dal/metadata.ts"
+        ],
+        "files": []
+    },
+    {
+        "name": "I2.T5",
+        "context": {
+            "task_id": "I2.T5",
+            "iteration_id": "I2",
+            "iteration_goal": "Implement the backend API server and the CRUD endpoints for managing `entity_types` and `field_defs`.",
+            "description": "Implement the database triggers for relation type checking (`edges_validate`) and the RLS policies for all tables, along with the API middleware to set `app.tenant_id` for each request.",
+            "agent_type_hint": "DatabaseAgent",
+            "inputs": "Section 6.6 and 6.7 of the manifest.",
+            "target_files": [
+                "packages/db/migrations/0001_triggers_and_rls.sql",
+                "apps/api/src/plugins/tenant_context.ts"
+            ],
+            "input_files": [
+                "packages/db/migrations/"
+            ],
+            "deliverables": "A new SQL migration file and a Fastify plugin.",
+            "acceptance_criteria": "The migration applies successfully. The middleware correctly sets the tenant ID on the database connection.",
+            "dependencies": [
+                "I1.T3",
+                "I2.T1"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I2",
+        "completed": false,
+        "target_files": [
+            "packages/db/migrations/0001_triggers_and_rls.sql",
+            "apps/api/src/plugins/tenant_context.ts"
+        ],
+        "input_files": [
+            "packages/db/migrations/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I3.T1",
+        "context": {
+            "task_id": "I3.T1",
+            "iteration_id": "I3",
+            "iteration_goal": "Implement CRUD operations for `records`, including the dynamic validation engine and the initial version of the Filter DSL for searching.",
+            "description": "Update `api/openapi.yaml` to include the endpoints for `records`: `POST /entities/:entityTypeKey`, `GET /entities/:entityTypeKey/:id`, `PATCH /entities/:entityTypeKey/:id`, and `POST /entities/:entityTypeKey/search`.",
+            "agent_type_hint": "DocumentationAgent",
+            "inputs": "Section 9.2 of the manifest, existing OpenAPI spec.",
+            "target_files": [
+                "api/openapi.yaml"
+            ],
+            "input_files": [
+                "api/openapi.yaml"
+            ],
+            "deliverables": "Updated OpenAPI YAML file.",
+            "acceptance_criteria": "The spec is valid and includes the new record management endpoints.",
+            "dependencies": [
+                "I2.T2"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I3",
+        "completed": false,
+        "target_files": [
+            "api/openapi.yaml"
+        ],
+        "input_files": [
+            "api/openapi.yaml"
+        ],
+        "files": []
+    },
+    {
+        "name": "I3.T2",
+        "context": {
+            "task_id": "I3.T2",
+            "iteration_id": "I3",
+            "iteration_goal": "Implement CRUD operations for `records`, including the dynamic validation engine and the initial version of the Filter DSL for searching.",
+            "description": "Implement the `Validation Engine` in the `packages/core` package. It should contain a function that takes an array of `field_defs` and returns a Zod object schema. Implement memoization for caching.",
+            "agent_type_hint": "BackendAgent",
+            "inputs": "Section 7.1 of the manifest.",
+            "target_files": [
+                "packages/core/src/validation.ts"
+            ],
+            "input_files": [
+                "packages/core/"
+            ],
+            "deliverables": "A well-tested validation schema builder function.",
+            "acceptance_criteria": "The function correctly translates `field_defs` of all kinds (`text`, `number`, `select`, etc.) into corresponding Zod validators.",
+            "dependencies": [
+                "I1.T1"
+            ],
+            "parallelizable": true
+        },
+        "output": null,
+        "iteration_id": "I3",
+        "completed": false,
+        "target_files": [
+            "packages/core/src/validation.ts"
+        ],
+        "input_files": [
+            "packages/core/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I3.T3",
+        "context": {
+            "task_id": "I3.T3",
+            "iteration_id": "I3",
+            "iteration_goal": "Implement CRUD operations for `records`, including the dynamic validation engine and the initial version of the Filter DSL for searching.",
+            "description": "Implement the DAL functions for `records` within `apps/api`, including create, read, update, and a search function that accepts compiled SQL fragments.",
+            "agent_type_hint": "BackendAgent",
+            "inputs": "Drizzle schema from `I1.T2`.",
+            "target_files": [
+                "apps/api/src/lib/dal/records.ts"
+            ],
+            "input_files": [
+                "packages/db/src/schema.ts",
+                "apps/api/src/"
+            ],
+            "deliverables": "TypeScript functions for interacting with the `records` table.",
+            "acceptance_criteria": "Functions are type-safe and correctly perform their respective database operations.",
+            "dependencies": [
+                "I1.T2"
+            ],
+            "parallelizable": true
+        },
+        "output": null,
+        "iteration_id": "I3",
+        "completed": false,
+        "target_files": [
+            "apps/api/src/lib/dal/records.ts"
+        ],
+        "input_files": [
+            "packages/db/src/schema.ts",
+            "apps/api/src/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I3.T4",
+        "context": {
+            "task_id": "I3.T4",
+            "iteration_id": "I3",
+            "iteration_goal": "Implement CRUD operations for `records`, including the dynamic validation engine and the initial version of the Filter DSL for searching.",
+            "description": "Implement the core `Filter DSL Compiler` in `packages/core`. This initial version should support `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `contains`, `fulltext`, and logical operators `and`, `or`.",
+            "agent_type_hint": "BackendAgent",
+            "inputs": "Section 8 of the manifest.",
+            "target_files": [
+                "packages/core/src/filter-compiler.ts"
+            ],
+            "input_files": [
+                "packages/core/"
+            ],
+            "deliverables": "A function that compiles Filter DSL JSON into parameterized SQL WHERE clauses.",
+            "acceptance_criteria": "The compiler produces safe, parameterized SQL. Unit tests cover all supported operators.",
+            "dependencies": [
+                "I1.T1"
+            ],
+            "parallelizable": true
+        },
+        "output": null,
+        "iteration_id": "I3",
+        "completed": false,
+        "target_files": [
+            "packages/core/src/filter-compiler.ts"
+        ],
+        "input_files": [
+            "packages/core/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I3.T5",
+        "context": {
+            "task_id": "I3.T5",
+            "iteration_id": "I3",
+            "iteration_goal": "Implement CRUD operations for `records`, including the dynamic validation engine and the initial version of the Filter DSL for searching.",
+            "description": "Implement the API routes and handlers for record CRUD and search, integrating the Validation Engine (`I3.T2`) for writes and the Filter Compiler (`I3.T4`) for search.",
+            "agent_type_hint": "BackendAgent",
+            "inputs": "OpenAPI spec (`I3.T1`), Validation Engine (`I3.T2`), Record DAL (`I3.T3`), Filter Compiler (`I3.T4`).",
+            "target_files": [
+                "apps/api/src/routes/entities/"
+            ],
+            "input_files": [
+                "api/openapi.yaml",
+                "packages/core/",
+                "apps/api/src/lib/dal/records.ts"
+            ],
+            "deliverables": "Implemented API routes for records.",
+            "acceptance_criteria": "Endpoints behave as specified. Validation errors are returned in the correct format. Search returns filtered results.",
+            "dependencies": [
+                "I3.T1",
+                "I3.T2",
+                "I3.T3",
+                "I3.T4"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I3",
+        "completed": false,
+        "target_files": [
+            "apps/api/src/routes/entities/"
+        ],
+        "input_files": [
+            "api/openapi.yaml",
+            "packages/core/",
+            "apps/api/src/lib/dal/records.ts"
+        ],
+        "files": []
+    },
+    {
+        "name": "I3.T6",
+        "context": {
+            "task_id": "I3.T6",
+            "iteration_id": "I3",
+            "iteration_goal": "Implement CRUD operations for `records`, including the dynamic validation engine and the initial version of the Filter DSL for searching.",
+            "description": "Implement the database triggers for FTS refresh (`records_fts_refresh`) and versioning (`records_versioning`) as new migration files.",
+            "agent_type_hint": "DatabaseAgent",
+            "inputs": "Section 6.6 of the manifest.",
+            "target_files": [
+                "packages/db/migrations/0002_record_triggers.sql"
+            ],
+            "input_files": [
+                "packages/db/migrations/"
+            ],
+            "deliverables": "A new SQL migration file.",
+            "acceptance_criteria": "The migration applies successfully. Updating a record correctly populates the `fts` column and creates an entry in `record_versions`.",
+            "dependencies": [
+                "I1.T3"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I3",
+        "completed": false,
+        "target_files": [
+            "packages/db/migrations/0002_record_triggers.sql"
+        ],
+        "input_files": [
+            "packages/db/migrations/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I4.T1",
+        "context": {
+            "task_id": "I4.T1",
+            "iteration_id": "I4",
+            "iteration_goal": "Set up the Next.js frontend application and build the UI for managing Entity Types and Field Definitions.",
+            "description": "Scaffold the Next.js application in `apps/web` using TypeScript. Set up basic project structure, including components, pages, and styles.",
+            "agent_type_hint": "FrontendAgent",
+            "inputs": "Section 15 of the manifest.",
+            "target_files": [
+                "apps/web/src/",
+                "apps/web/package.json",
+                "apps/web/next.config.js"
+            ],
+            "input_files": [
+                "apps/web/"
+            ],
+            "deliverables": "A runnable Next.js application.",
+            "acceptance_criteria": "The default Next.js page loads successfully in a browser.",
+            "dependencies": [
+                "I1.T1"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I4",
+        "completed": false,
+        "target_files": [
+            "apps/web/src/",
+            "apps/web/package.json",
+            "apps/web/next.config.js"
+        ],
+        "input_files": [
+            "apps/web/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I4.T2",
+        "context": {
+            "task_id": "I4.T2",
+            "iteration_id": "I4",
+            "iteration_goal": "Set up the Next.js frontend application and build the UI for managing Entity Types and Field Definitions.",
+            "description": "Generate a typed API client using a tool like `openapi-typescript` and place it in the `packages/sdk` directory. Configure the frontend to use this SDK for all API calls.",
+            "agent_type_hint": "SetupAgent",
+            "inputs": "The OpenAPI spec from `I3.T1`.",
+            "target_files": [
+                "packages/sdk/src/index.ts"
+            ],
+            "input_files": [
+                "api/openapi.yaml"
+            ],
+            "deliverables": "A TypeScript SDK package.",
+            "acceptance_criteria": "The SDK is generated successfully and provides typed methods for all defined API endpoints.",
+            "dependencies": [
+                "I3.T1"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I4",
+        "completed": false,
+        "target_files": [
+            "packages/sdk/src/index.ts"
+        ],
+        "input_files": [
+            "api/openapi.yaml"
+        ],
+        "files": []
+    },
+    {
+        "name": "I4.T3",
+        "context": {
+            "task_id": "I4.T3",
+            "iteration_id": "I4",
+            "iteration_goal": "Set up the Next.js frontend application and build the UI for managing Entity Types and Field Definitions.",
+            "description": "Integrate TanStack Query (React Query) into the Next.js app for server state management. Configure a global query client provider.",
+            "agent_type_hint": "FrontendAgent",
+            "inputs": "Next.js app from `I4.T1`.",
+            "target_files": [
+                "apps/web/src/lib/query-client.ts",
+                "apps/web/src/pages/_app.tsx"
+            ],
+            "input_files": [
+                "apps/web/src/pages/_app.tsx"
+            ],
+            "deliverables": "React Query setup.",
+            "acceptance_criteria": "The `QueryClientProvider` is correctly configured at the root of the application.",
+            "dependencies": [
+                "I4.T1"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I4",
+        "completed": false,
+        "target_files": [
+            "apps/web/src/lib/query-client.ts",
+            "apps/web/src/pages/_app.tsx"
+        ],
+        "input_files": [
+            "apps/web/src/pages/_app.tsx"
+        ],
+        "files": []
+    },
+    {
+        "name": "I4.T4",
+        "context": {
+            "task_id": "I4.T4",
+            "iteration_id": "I4",
+            "iteration_goal": "Set up the Next.js frontend application and build the UI for managing Entity Types and Field Definitions.",
+            "description": "Create the UI pages and components for listing, creating, and editing `Entity Types`. Use the generated SDK and React Query for data fetching and mutations.",
+            "agent_type_hint": "FrontendAgent",
+            "inputs": "SDK from `I4.T2`.",
+            "target_files": [
+                "apps/web/src/pages/admin/entity-types/",
+                "apps/web/src/components/entity-types/"
+            ],
+            "input_files": [
+                "packages/sdk/",
+                "apps/web/src/"
+            ],
+            "deliverables": "React components and pages for Entity Type management.",
+            "acceptance_criteria": "Users can view a list of entity types, create a new one, and edit an existing one's label/description.",
+            "dependencies": [
+                "I4.T2",
+                "I4.T3"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I4",
+        "completed": false,
+        "target_files": [
+            "apps/web/src/pages/admin/entity-types/",
+            "apps/web/src/components/entity-types/"
+        ],
+        "input_files": [
+            "packages/sdk/",
+            "apps/web/src/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I4.T5",
+        "context": {
+            "task_id": "I4.T5",
+            "iteration_id": "I4",
+            "iteration_goal": "Set up the Next.js frontend application and build the UI for managing Entity Types and Field Definitions.",
+            "description": "Create the UI pages and components for managing `Field Definitions` for a specific entity type.",
+            "agent_type_hint": "FrontendAgent",
+            "inputs": "SDK from `I4.T2`.",
+            "target_files": [
+                "apps/web/src/pages/admin/entity-types/[id].tsx",
+                "apps/web/src/components/field-defs/"
+            ],
+            "input_files": [
+                "packages/sdk/",
+                "apps/web/src/"
+            ],
+            "deliverables": "React components and pages for Field Definition management.",
+            "acceptance_criteria": "Users can view, add, and edit fields for a selected entity type. The form should handle all `kind` options and validation rules.",
+            "dependencies": [
+                "I4.T4"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I4",
+        "completed": false,
+        "target_files": [
+            "apps/web/src/pages/admin/entity-types/[id].tsx",
+            "apps/web/src/components/field-defs/"
+        ],
+        "input_files": [
+            "packages/sdk/",
+            "apps/web/src/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I5.T1",
+        "context": {
+            "task_id": "I5.T1",
+            "iteration_id": "I5",
+            "iteration_goal": "Implement the primary user-facing features: the dynamic data table and dynamic forms for viewing, searching, and editing records.",
+            "description": "Implement a dynamic table component using TanStack Table. The component should accept an `entityTypeKey`, fetch its `field_defs`, and render columns dynamically. It should also fetch data from the `/search` endpoint.",
+            "agent_type_hint": "FrontendAgent",
+            "inputs": "Section 15.2 of the manifest.",
+            "target_files": [
+                "apps/web/src/components/dynamic-table/",
+                "apps/web/src/pages/entities/[entityTypeKey]/index.tsx"
+            ],
+            "input_files": [
+                "apps/web/src/"
+            ],
+            "deliverables": "A reusable dynamic table component and a page to display it.",
+            "acceptance_criteria": "The table correctly displays columns and data for a given entity type. Basic server-side pagination works.",
+            "dependencies": [
+                "I4.T5"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I5",
+        "completed": false,
+        "target_files": [
+            "apps/web/src/components/dynamic-table/",
+            "apps/web/src/pages/entities/[entityTypeKey]/index.tsx"
+        ],
+        "input_files": [
+            "apps/web/src/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I5.T2",
+        "context": {
+            "task_id": "I5.T2",
+            "iteration_id": "I5",
+            "iteration_goal": "Implement the primary user-facing features: the dynamic data table and dynamic forms for viewing, searching, and editing records.",
+            "description": "Implement a filter builder UI that allows users to construct a Filter DSL JSON object. This UI should be connected to the dynamic table to trigger searches.",
+            "agent_type_hint": "FrontendAgent",
+            "inputs": "Section 15.2 of the manifest.",
+            "target_files": [
+                "apps/web/src/components/filter-builder/"
+            ],
+            "input_files": [
+                "apps/web/src/components/dynamic-table/"
+            ],
+            "deliverables": "A filter builder component.",
+            "acceptance_criteria": "The component generates a valid Filter DSL object based on user input and refetches table data when the filter is applied.",
+            "dependencies": [
+                "I5.T1"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I5",
+        "completed": false,
+        "target_files": [
+            "apps/web/src/components/filter-builder/"
+        ],
+        "input_files": [
+            "apps/web/src/components/dynamic-table/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I5.T3",
+        "context": {
+            "task_id": "I5.T3",
+            "iteration_id": "I5",
+            "iteration_goal": "Implement the primary user-facing features: the dynamic data table and dynamic forms for viewing, searching, and editing records.",
+            "description": "Implement a dynamic form component using TanStack Form. The component should fetch `field_defs` and render the appropriate input fields (text, number, select, etc.) with client-side validation.",
+            "agent_type_hint": "FrontendAgent",
+            "inputs": "Section 15.3 of the manifest.",
+            "target_files": [
+                "apps/web/src/components/dynamic-form/"
+            ],
+            "input_files": [
+                "apps/web/src/"
+            ],
+            "deliverables": "A reusable dynamic form component.",
+            "acceptance_criteria": "The form renders correctly for different field kinds. Client-side validation provides immediate feedback.",
+            "dependencies": [
+                "I4.T5"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I5",
+        "completed": false,
+        "target_files": [
+            "apps/web/src/components/dynamic-form/"
+        ],
+        "input_files": [
+            "apps/web/src/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I5.T4",
+        "context": {
+            "task_id": "I5.T4",
+            "iteration_id": "I5",
+            "iteration_goal": "Implement the primary user-facing features: the dynamic data table and dynamic forms for viewing, searching, and editing records.",
+            "description": "Create pages for creating and editing records, integrating the dynamic form component. On submission, it should call the appropriate API endpoints.",
+            "agent_type_hint": "FrontendAgent",
+            "inputs": "Dynamic form from `I5.T3`.",
+            "target_files": [
+                "apps/web/src/pages/entities/[entityTypeKey]/new.tsx",
+                "apps/web/src/pages/entities/[entityTypeKey]/[recordId].tsx"
+            ],
+            "input_files": [
+                "apps/web/src/components/dynamic-form/"
+            ],
+            "deliverables": "Pages for creating and editing records.",
+            "acceptance_criteria": "Users can successfully create and update records. Server-side validation errors are displayed correctly on the form.",
+            "dependencies": [
+                "I5.T3"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I5",
+        "completed": false,
+        "target_files": [
+            "apps/web/src/pages/entities/[entityTypeKey]/new.tsx",
+            "apps/web/src/pages/entities/[entityTypeKey]/[recordId].tsx"
+        ],
+        "input_files": [
+            "apps/web/src/components/dynamic-form/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I6.T1",
+        "context": {
+            "task_id": "I6.T1",
+            "iteration_id": "I6",
+            "iteration_goal": "Implement relationship management, real-time updates via SSE, and the complete authorization model (RBAC + Field ACLs).",
+            "description": "Update `api/openapi.yaml` to include endpoints for creating and deleting relations (`/relations`).",
+            "agent_type_hint": "DocumentationAgent",
+            "inputs": "Section 9.3 of the manifest.",
+            "target_files": [
+                "api/openapi.yaml"
+            ],
+            "input_files": [
+                "api/openapi.yaml"
+            ],
+            "deliverables": "Updated OpenAPI YAML file.",
+            "acceptance_criteria": "The spec is valid and includes the new relation management endpoints.",
+            "dependencies": [
+                "I3.T1"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I6",
+        "completed": false,
+        "target_files": [
+            "api/openapi.yaml"
+        ],
+        "input_files": [
+            "api/openapi.yaml"
+        ],
+        "files": []
+    },
+    {
+        "name": "I6.T2",
+        "context": {
+            "task_id": "I6.T2",
+            "iteration_id": "I6",
+            "iteration_goal": "Implement relationship management, real-time updates via SSE, and the complete authorization model (RBAC + Field ACLs).",
+            "description": "Implement the backend logic and API endpoints for creating and deleting `edges` (relations).",
+            "agent_type_hint": "BackendAgent",
+            "inputs": "OpenAPI spec from `I6.T1`.",
+            "target_files": [
+                "apps/api/src/routes/relations/",
+                "apps/api/src/lib/dal/edges.ts"
+            ],
+            "input_files": [
+                "api/openapi.yaml",
+                "apps/api/src/"
+            ],
+            "deliverables": "Implemented API routes for relations.",
+            "acceptance_criteria": "Users can create and delete relationships between records. The `edges_validate` trigger prevents invalid relations.",
+            "dependencies": [
+                "I6.T1",
+                "I2.T5"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I6",
+        "completed": false,
+        "target_files": [
+            "apps/api/src/routes/relations/",
+            "apps/api/src/lib/dal/edges.ts"
+        ],
+        "input_files": [
+            "api/openapi.yaml",
+            "apps/api/src/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I6.T3",
+        "context": {
+            "task_id": "I6.T3",
+            "iteration_id": "I6",
+            "iteration_goal": "Implement relationship management, real-time updates via SSE, and the complete authorization model (RBAC + Field ACLs).",
+            "description": "Implement the `SSE Broadcaster` on the backend, which listens to Postgres `NOTIFY` events and forwards them to clients connected to a `GET /events` endpoint. Add `NOTIFY` calls to the database triggers.",
+            "agent_type_hint": "BackendAgent",
+            "inputs": "Section 9.5 and 24.4 of the manifest.",
+            "target_files": [
+                "apps/api/src/routes/events.ts",
+                "packages/db/migrations/0003_notify_triggers.sql"
+            ],
+            "input_files": [
+                "apps/api/src/",
+                "packages/db/migrations/"
+            ],
+            "deliverables": "SSE endpoint and updated DB triggers.",
+            "acceptance_criteria": "Changes to records or edges emit a notification that is broadcast to connected SSE clients.",
+            "dependencies": [
+                "I3.T6"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I6",
+        "completed": false,
+        "target_files": [
+            "apps/api/src/routes/events.ts",
+            "packages/db/migrations/0003_notify_triggers.sql"
+        ],
+        "input_files": [
+            "apps/api/src/",
+            "packages/db/migrations/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I6.T4",
+        "context": {
+            "task_id": "I6.T4",
+            "iteration_id": "I6",
+            "iteration_goal": "Implement relationship management, real-time updates via SSE, and the complete authorization model (RBAC + Field ACLs).",
+            "description": "Integrate an SSE client into the frontend. On receiving events, invalidate the relevant React Query caches to trigger automatic data refetching and UI updates.",
+            "agent_type_hint": "FrontendAgent",
+            "inputs": "SSE endpoint from `I6.T3`.",
+            "target_files": [
+                "apps/web/src/hooks/use-sse.ts",
+                "apps/web/src/pages/_app.tsx"
+            ],
+            "input_files": [
+                "apps/web/src/"
+            ],
+            "deliverables": "Real-time UI updates.",
+            "acceptance_criteria": "When a record is updated in one browser tab, the change is reflected in the data table in another tab without a manual refresh.",
+            "dependencies": [
+                "I6.T3",
+                "I5.T1"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I6",
+        "completed": false,
+        "target_files": [
+            "apps/web/src/hooks/use-sse.ts",
+            "apps/web/src/pages/_app.tsx"
+        ],
+        "input_files": [
+            "apps/web/src/"
+        ],
+        "files": []
+    },
+    {
+        "name": "I6.T5",
+        "context": {
+            "task_id": "I6.T5",
+            "iteration_id": "I6",
+            "iteration_goal": "Implement relationship management, real-time updates via SSE, and the complete authorization model (RBAC + Field ACLs).",
+            "description": "Implement the authorization layer in the backend. This includes a middleware to parse JWTs and an authorization service that enforces RBAC and per-field ACLs on all relevant endpoints.",
+            "agent_type_hint": "BackendAgent",
+            "inputs": "Section 10 of the manifest.",
+            "target_files": [
+                "apps/api/src/plugins/auth.ts",
+                "apps/api/src/lib/authz.ts"
+            ],
+            "input_files": [
+                "apps/api/src/"
+            ],
+            "deliverables": "A comprehensive authorization system.",
+            "acceptance_criteria": "API requests fail with 401/403 errors for users with insufficient permissions. Data returned from read endpoints is stripped of fields the user cannot see.",
+            "dependencies": [
+                "I3.T5"
+            ],
+            "parallelizable": false
+        },
+        "output": null,
+        "iteration_id": "I6",
+        "completed": false,
+        "target_files": [
+            "apps/api/src/plugins/auth.ts",
+            "apps/api/src/lib/authz.ts"
+        ],
+        "input_files": [
+            "apps/api/src/"
+        ],
+        "files": []
+    }
+]
