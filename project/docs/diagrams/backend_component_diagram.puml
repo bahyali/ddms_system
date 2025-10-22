@@ -1,0 +1,32 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram for Backend API
+
+Container(api, "Backend API", "Node.js, Fastify") {
+    Component(rest_controller, "REST API Controllers", "Fastify Routes", "Exposes OpenAPI endpoints, handles HTTP requests/responses.")
+    Component(authz, "Authorization Service", "TypeScript Module", "Enforces RBAC and per-field ACLs on incoming requests.")
+    Component(validation_engine, "Validation Engine", "TypeScript Module", "Dynamically builds and memoizes Zod schemas from Field Definitions.")
+    Component(filter_compiler, "Filter DSL Compiler", "TypeScript Module", "Parses JSON filter DSL and compiles it into parameterized SQL queries.")
+    Component(core_services, "Core Business Logic", "TypeScript Modules", "Implements logic for managing records, fields, bulk operations, etc.")
+    Component(index_manager, "Index Manager", "TypeScript Module", "Manages creation of on-demand expression indexes concurrently.")
+    Component(sse_broadcaster, "SSE Broadcaster", "TypeScript Module", "Listens for Postgres NOTIFY events and pushes them to connected SSE clients.")
+    Component(dal, "Data Access Layer", "Drizzle ORM", "Provides a type-safe interface to the database.")
+}
+
+ContainerDb(db, "Database", "PostgreSQL", "Stores all system data.")
+
+Rel(rest_controller, authz, "Uses", "For checking permissions")
+Rel(rest_controller, validation_engine, "Uses", "For validating request bodies")
+Rel(rest_controller, core_services, "Delegates to", "For business operations")
+Rel(rest_controller, filter_compiler, "Uses", "For search requests")
+Rel(rest_controller, sse_broadcaster, "Uses", "To handle SSE connections")
+
+Rel(core_services, dal, "Uses", "To access data")
+Rel(filter_compiler, dal, "Generates SQL for")
+Rel(index_manager, dal, "Executes CREATE INDEX on")
+
+Rel(dal, db, "Reads/Writes data", "SQL/TCP")
+Rel_Back(sse_broadcaster, db, "Subscribes to events", "LISTEN/NOTIFY")
+
+@enduml
