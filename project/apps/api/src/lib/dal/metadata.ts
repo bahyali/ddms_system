@@ -141,6 +141,26 @@ export async function findFieldDefsByEntityType(
 }
 
 /**
+ * Finds a single field definition by its ID, ensuring it belongs to the correct tenant.
+ * @param db The Drizzle database instance.
+ * @param tenantId The ID of the tenant.
+ * @param fieldDefId The ID of the field definition to find.
+ * @returns The field definition, or undefined if not found.
+ */
+export async function findFieldDefById(
+  db: Db,
+  tenantId: string,
+  fieldDefId: string,
+) {
+  return db.query.fieldDefs.findFirst({
+    where: and(
+      eq(schema.fieldDefs.id, fieldDefId),
+      eq(schema.fieldDefs.tenantId, tenantId),
+    ),
+  });
+}
+
+/**
  * Updates an existing field definition.
  * @param db The Drizzle database instance.
  * @param tenantId The ID of the tenant.
