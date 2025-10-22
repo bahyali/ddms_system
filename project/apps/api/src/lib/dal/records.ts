@@ -7,7 +7,6 @@ import * as schema from '@ddms/db';
 //
 
 type Db = FastifyInstance['db'];
-type NewRecord = typeof schema.records.$inferInsert;
 type Record = typeof schema.records.$inferSelect;
 type RecordData = Record<string, unknown>;
 
@@ -92,7 +91,7 @@ export async function updateRecord(
   const [result] = await db
     .update(schema.records)
     .set({
-      data: payload.data,
+      data: sql`${schema.records.data} || ${payload.data}`,
       updatedBy: payload.updatedBy,
       updatedAt: new Date(), // Explicitly set updatedAt
     })
