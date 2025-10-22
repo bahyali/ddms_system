@@ -9,7 +9,7 @@ import type { Dispatch, SetStateAction } from 'react';
 
 interface DynamicTableProps<TData> {
   data: TData[];
-  columns: ColumnDef<TData, any>[];
+  columns: ColumnDef<TData, unknown>[];
   pageCount: number;
   pagination: PaginationState;
   setPagination: Dispatch<SetStateAction<PaginationState>>;

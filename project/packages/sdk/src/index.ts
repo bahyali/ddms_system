@@ -242,6 +242,8 @@ export interface components {
       rows: components["schemas"]["Record"][];
       /** @description A cursor to retrieve the next page of results. Null if there are no more results. */
       nextCursor?: string | null;
+      /** @description The total number of records matching the filter. */
+      total: number;
     };
     Sort: {
       /** @description The key of the field to sort by (e.g., 'budget', 'createdAt'). */

@@ -151,7 +151,7 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
         ? parseInt(Buffer.from(cursor, 'base64').toString('ascii'), 10)
         : 0;
 
-      const rows = await recordDal.searchRecords(
+      const { rows, total } = await recordDal.searchRecords(
         request.db,
         request.tenantId,
         entityType.id,
@@ -163,11 +163,11 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
       );
 
       const nextCursor =
-        rows.length === limit
+        offset + rows.length < total
           ? Buffer.from(String(offset + limit)).toString('base64')
           : null;
 
-      return reply.send({ rows, nextCursor });
+      return reply.send({ rows, nextCursor, total });
     },
   );
 

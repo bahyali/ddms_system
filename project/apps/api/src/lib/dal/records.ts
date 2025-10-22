@@ -91,7 +91,7 @@ export async function updateRecord(
   const [result] = await db
     .update(schema.records)
     .set({
-      data: sql`${schema.records.data} || ${payload.data}`,
+      data: sql`${schema.records.data} || ${JSON.stringify(payload.data)}::jsonb`,
       updatedBy: payload.updatedBy,
       updatedAt: new Date(), // Explicitly set updatedAt
     })
@@ -112,7 +112,7 @@ export async function updateRecord(
  * @param tenantId The ID of the tenant.
  * @param entityTypeId The ID of the entity type to search within.
  * @param options The search, sorting, and pagination options.
- * @returns An array of found records.
+ * @returns An object containing the found records and the total count.
  */
 export async function searchRecords(
   db: Db,
@@ -126,7 +126,12 @@ export async function searchRecords(
     options.filter,
   ];
 
-  let query = db
+  const totalQuery = db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(schema.records)
+    .where(and(...conditions));
+
+  let dataQuery = db
     .select()
     .from(schema.records)
     .where(and(...conditions));
@@ -135,7 +140,6 @@ export async function searchRecords(
     const direction = options.sort.direction === 'asc' ? asc : desc;
     const sortField = options.sort.field;
 
-    // A set of top-level fields that are valid for sorting
     const topLevelSortableFields: Set<string> = new Set([
       'id',
       'version',
@@ -146,24 +150,29 @@ export async function searchRecords(
     ]);
 
     let sortExpression;
-
     if (topLevelSortableFields.has(sortField)) {
       sortExpression =
         schema.records[sortField as keyof typeof schema.records];
     } else {
-      // Assume it's a key in the 'data' JSONB field.
-      // The route handler should validate this against fieldDefs to prevent SQL injection.
       sortExpression = sql`(${schema.records.data} ->> ${sortField})`;
     }
 
     if (sortExpression) {
-      query = query.orderBy(direction(sortExpression));
+      dataQuery = dataQuery.orderBy(direction(sortExpression));
     }
   }
 
-  query = query
+  dataQuery = dataQuery
     .limit(options.pagination.limit)
     .offset(options.pagination.offset);
 
-  return query;
+  const [[totalResult], rows] = await Promise.all([
+    totalQuery,
+    dataQuery,
+  ]);
+
+  return {
+    rows,
+    total: totalResult?.total ?? 0,
+  };
 }

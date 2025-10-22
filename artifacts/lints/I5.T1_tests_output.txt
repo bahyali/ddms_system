@@ -1,0 +1,70 @@
+Scope: all 6 workspace projects
+Progress: resolved 0, reused 1, downloaded 0, added 0
+ WARN  deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+ WARN  7 deprecated subdependencies found: @esbuild-kit/core-utils@3.3.2, @esbuild-kit/esm-loader@2.6.5, @humanwhocodes/config-array@0.13.0, @humanwhocodes/object-schema@2.0.3, glob@7.2.3, inflight@1.0.6, rimraf@3.0.2
+Packages: +2
+++
+Progress: resolved 550, reused 454, downloaded 2, added 2, done
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│   Ignored build scripts: unrs-resolver.                                      │
+│   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+│   to run scripts.                                                            │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Done in 922ms using pnpm v10.19.0
+
+> ddms@1.0.0 test /Users/bahy/Documents/playground/capstone_project/server/projects/zentio_challenge/project
+> pnpm --parallel run test
+
+Scope: 5 of 6 workspace projects
+apps/api test$ echo "@ddms/api: no test specified" && exit 0
+packages/core test$ tsx --test src/**/*.test.ts
+packages/db test$ echo "@ddms/db: no test specified" && exit 0
+packages/sdk test$ echo "@ddms/sdk: no test specified" && exit 0
+apps/api test: @ddms/api: no test specified
+apps/api test: Done
+packages/db test: @ddms/db: no test specified
+packages/sdk test: @ddms/sdk: no test specified
+packages/db test: Done
+packages/sdk test: Done
+packages/core test: ▶ compileFilter
+packages/core test:   ✔ should handle null or empty filter (0.581208ms)
+packages/core test:   ✔ should compile an "eq" filter (0.09925ms)
+packages/core test:   ✔ should compile a "neq" filter (0.048625ms)
+packages/core test:   ✔ should compile a "gt" filter for a number (0.047042ms)
+packages/core test:   ✔ should compile a "gte" filter (0.0565ms)
+packages/core test:   ✔ should compile an "lt" filter (0.042625ms)
+packages/core test:   ✔ should compile an "lte" filter (0.041709ms)
+packages/core test:   ✔ should compile an "in" filter (0.040958ms)
+packages/core test:   ✔ should compile a "contains" filter (0.048917ms)
+packages/core test:   ✔ should compile a "fulltext" filter (0.062834ms)
+packages/core test:   ✔ should compile an "and" filter with multiple conditions (0.061375ms)
+packages/core test:   ✔ should compile an "or" filter with multiple conditions (0.047291ms)
+packages/core test:   ✔ should handle an empty "and" filter (0.032666ms)
+packages/core test:   ✔ should compile a nested filter: (A AND B) OR C (0.053042ms)
+packages/core test:   ✔ should compile a nested filter: A AND (B OR C) (0.040958ms)
+packages/core test:   ✔ should throw an error for an unknown operator (0.206333ms)
+packages/core test: ✔ compileFilter (2.024125ms)
+packages/core test: ▶ getValidationSchema
+packages/core test:   ✔ should handle required and optional text fields (1.5715ms)
+packages/core test:   ✔ should handle text validation rules (minLen, maxLen, regex) (0.450042ms)
+packages/core test:   ✔ should handle number validation rules (min, max, integer) (0.2715ms)
+packages/core test:   ✔ should handle date validation (1.124667ms)
+packages/core test:   ✔ should handle boolean fields (0.15375ms)
+packages/core test:   ✔ should handle single-select fields (0.271083ms)
+packages/core test:   ✔ should handle multi-select fields (0.152208ms)
+packages/core test:   ✔ should handle relation fields (one and many) (0.2585ms)
+packages/core test:   ✔ should use memoized schema on subsequent calls (0.09825ms)
+packages/core test: ✔ getValidationSchema (4.93ms)
+packages/core test: ℹ tests 25
+packages/core test: ℹ suites 2
+packages/core test: ℹ pass 25
+packages/core test: ℹ fail 0
+packages/core test: ℹ cancelled 0
+packages/core test: ℹ skipped 0
+packages/core test: ℹ todo 0
+packages/core test: ℹ duration_ms 125.058125
+packages/core test: Done

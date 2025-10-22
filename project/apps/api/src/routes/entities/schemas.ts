@@ -76,6 +76,7 @@ export const recordSchema = z.object({
 export const searchResponseSchema = z.object({
   rows: z.array(recordSchema),
   nextCursor: z.string().nullable(),
+  total: z.number().int(),
 });
 
 export const validationErrorDetailSchema = z.object({

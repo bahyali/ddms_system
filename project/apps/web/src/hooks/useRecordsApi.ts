@@ -1,50 +1,50 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '~/lib/api';
-import type { operations } from '@ddms/sdk';
+import type { components } from '@ddms/sdk';
+
+type Filter = components['schemas']['Filter'];
 
 // Define the structure for pagination parameters
-interface GetRecordsParams {
+export interface GetRecordsParams {
   entityTypeKey: string;
   pageIndex: number;
   pageSize: number;
-  filter?: operations['searchRecords']['requestBody']['content']['application/json']['filter'];
+  filter?: Filter;
 }
 
 // Query Keys
 const recordsKeys = {
   all: (entityTypeKey: string) => ['records', entityTypeKey] as const,
-  paginated: (params: Omit<GetRecordsParams, 'filter'>) => [
+  paginated: (params: GetRecordsParams) => [
     ...recordsKeys.all(params.entityTypeKey),
     params,
   ],
 };
 
 // Hook to get paginated records for an entity type
-export const useGetRecords = ({
-  entityTypeKey,
-  pageIndex,
-  pageSize,
-  filter,
-}: GetRecordsParams) => {
+export const useGetRecords = (params: GetRecordsParams) => {
+  const { entityTypeKey, pageIndex, pageSize, filter } = params;
+
   return useQuery({
-    queryKey: recordsKeys.paginated({ entityTypeKey, pageIndex, pageSize }),
+    queryKey: recordsKeys.paginated(params),
     queryFn: async () => {
       const offset = pageIndex * pageSize;
+      // Use null for the first page's cursor, which the API interprets as offset 0
+      const cursor =
+        offset > 0 ? Buffer.from(String(offset)).toString('base64') : null;
+
       const { data, error } = await api.POST('/entities/{entityTypeKey}/search', {
         params: { path: { entityTypeKey } },
         body: {
-          filter: filter || null,
+          filter: filter || undefined,
           limit: pageSize,
-          offset: offset,
+          cursor: cursor,
         },
       });
 
       if (error) throw error;
 
-      return data as {
-        rows: { id: string; data: Record<string, unknown> }[];
-        total: number;
-      };
+      return data;
     },
     enabled: !!entityTypeKey,
   });

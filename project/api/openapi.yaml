@@ -658,8 +658,12 @@ components:
           type: string
           nullable: true
           description: 'A cursor to retrieve the next page of results. Null if there are no more results.'
+        total:
+          type: integer
+          description: 'The total number of records matching the filter.'
       required:
         - rows
+        - total
 
     Sort:
       type: object
