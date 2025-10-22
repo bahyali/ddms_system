@@ -1,0 +1,28 @@
+Scope: all 6 workspace projects
+Progress: resolved 0, reused 1, downloaded 0, added 0
+ WARN  deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+ WARN  7 deprecated subdependencies found: @esbuild-kit/core-utils@3.3.2, @esbuild-kit/esm-loader@2.6.5, @humanwhocodes/config-array@0.13.0, @humanwhocodes/object-schema@2.0.3, glob@7.2.3, inflight@1.0.6, rimraf@3.0.2
+Already up to date
+Progress: resolved 300, reused 232, downloaded 0, added 0, done
+
+Done in 386ms using pnpm v10.19.0
+
+> ddms@1.0.0 test /Users/bahy/Documents/playground/capstone_project/server/projects/zentio_challenge/project
+> pnpm --parallel run test
+
+Scope: 5 of 6 workspace projects
+apps/api test$ echo "@ddms/api: no test specified" && exit 0
+apps/web test$ echo "@ddms/web: no test specified" && exit 0
+packages/core test$ echo "@ddms/core: no test specified" && exit 0
+packages/db test$ echo "@ddms/db: no test specified" && exit 0
+packages/sdk test$ echo "@ddms/sdk: no test specified" && exit 0
+apps/api test: @ddms/api: no test specified
+packages/core test: @ddms/core: no test specified
+apps/web test: @ddms/web: no test specified
+apps/api test: Done
+packages/db test: @ddms/db: no test specified
+apps/web test: Done
+packages/core test: Done
+packages/sdk test: @ddms/sdk: no test specified
+packages/db test: Done
+packages/sdk test: Done
