@@ -1,0 +1,61 @@
+Scope: all 6 workspace projects
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+Done in 309ms using pnpm v10.19.0
+
+> ddms@1.0.0 test /Users/bahy/Documents/playground/capstone_project/server/projects/zentio_challenge/project
+> pnpm --parallel run test
+
+Scope: 5 of 6 workspace projects
+apps/api test$ echo "@ddms/api: no test specified" && exit 0
+apps/web test$ echo "@ddms/web: no test specified" && exit 0
+packages/core test$ tsx --test src/**/*.test.ts
+packages/db test$ echo "@ddms/db: no test specified" && exit 0
+packages/sdk test$ echo "@ddms/sdk: no test specified" && exit 0
+apps/api test: @ddms/api: no test specified
+apps/web test: @ddms/web: no test specified
+apps/api test: Done
+packages/db test: @ddms/db: no test specified
+apps/web test: Done
+packages/sdk test: @ddms/sdk: no test specified
+packages/db test: Done
+packages/sdk test: Done
+packages/core test: ▶ compileFilter
+packages/core test:   ✔ should handle null or empty filter (0.663ms)
+packages/core test:   ✔ should compile an "eq" filter (0.111125ms)
+packages/core test:   ✔ should compile a "neq" filter (0.050125ms)
+packages/core test:   ✔ should compile a "gt" filter for a number (0.061ms)
+packages/core test:   ✔ should compile a "gte" filter (0.05775ms)
+packages/core test:   ✔ should compile an "lt" filter (0.050834ms)
+packages/core test:   ✔ should compile an "lte" filter (0.045209ms)
+packages/core test:   ✔ should compile an "in" filter (0.047042ms)
+packages/core test:   ✔ should compile a "contains" filter (0.06525ms)
+packages/core test:   ✔ should compile a "fulltext" filter (0.070833ms)
+packages/core test:   ✔ should compile an "and" filter with multiple conditions (0.074833ms)
+packages/core test:   ✔ should compile an "or" filter with multiple conditions (0.061875ms)
+packages/core test:   ✔ should handle an empty "and" filter (0.039208ms)
+packages/core test:   ✔ should compile a nested filter: (A AND B) OR C (0.059875ms)
+packages/core test:   ✔ should compile a nested filter: A AND (B OR C) (0.052042ms)
+packages/core test:   ✔ should throw an error for an unknown operator (0.243875ms)
+packages/core test: ✔ compileFilter (2.343375ms)
+packages/core test: ▶ getValidationSchema
+packages/core test:   ✔ should handle required and optional text fields (1.340792ms)
+packages/core test:   ✔ should handle text validation rules (minLen, maxLen, regex) (0.3865ms)
+packages/core test:   ✔ should handle number validation rules (min, max, integer) (0.245917ms)
+packages/core test:   ✔ should handle date validation (1.066584ms)
+packages/core test:   ✔ should handle boolean fields (0.157042ms)
+packages/core test:   ✔ should handle single-select fields (0.257625ms)
+packages/core test:   ✔ should handle multi-select fields (0.14825ms)
+packages/core test:   ✔ should handle relation fields (one and many) (0.265375ms)
+packages/core test:   ✔ should use memoized schema on subsequent calls (0.088833ms)
+packages/core test: ✔ getValidationSchema (4.492208ms)
+packages/core test: ℹ tests 25
+packages/core test: ℹ suites 2
+packages/core test: ℹ pass 25
+packages/core test: ℹ fail 0
+packages/core test: ℹ cancelled 0
+packages/core test: ℹ skipped 0
+packages/core test: ℹ todo 0
+packages/core test: ℹ duration_ms 189.981208
+packages/core test: Done

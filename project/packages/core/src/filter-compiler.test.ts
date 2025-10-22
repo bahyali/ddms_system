@@ -176,7 +176,7 @@ describe('compileFilter', () => {
   });
 
   it('should throw an error for an unknown operator', () => {
-    const filter = { op: 'unknown', field: 'test', value: 1 } as any;
+    const filter = { op: 'unknown', field: 'test', value: 1 } as unknown as Filter;
     assert.throws(
       () => compileFilter(filter),
       new Error('Unsupported filter operator: unknown'),

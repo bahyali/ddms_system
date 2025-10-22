@@ -39,12 +39,12 @@ export type Filter =
 
 export type CompiledFilter = {
   sql: string;
-  params: any[];
+  params: unknown[];
 };
 
 type ProcessedNode = {
   sql: string;
-  params: any[];
+  params: unknown[];
   nextParamIndex: number;
 };
 
@@ -126,7 +126,9 @@ function processNode(node: Filter, paramIndex: number): ProcessedNode {
 
     default: {
       const exhaustiveCheck: never = node;
-      throw new Error(`Unsupported filter operator: ${(exhaustiveCheck as any).op}`);
+      throw new Error(
+        `Unsupported filter operator: ${(exhaustiveCheck as { op: string }).op}`,
+      );
     }
   }
 }
