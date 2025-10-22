@@ -12,6 +12,8 @@ tags:
     description: 'Operations for managing Entity Types and Field Definitions.'
   - name: Records
     description: 'Operations for managing Records (instances of an Entity Type).'
+  - name: Relations
+    description: 'Operations for managing relationships (edges) between Records.'
 
 paths:
   /entity-types:
@@ -254,6 +256,78 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /relations:
+    post:
+      tags:
+        - Relations
+      summary: 'Create Relation'
+      description: 'Creates a new relationship (edge) between two records.'
+      operationId: 'createRelation'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelationCreate'
+      responses:
+        '201':
+          description: 'Relation created successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    get:
+      tags:
+        - Relations
+      summary: 'List Relations'
+      description: 'Retrieves a list of relations, typically filtered by the source record and field.'
+      operationId: 'listRelations'
+      parameters:
+        - name: from_record_id
+          in: query
+          required: true
+          description: 'The ID of the source record to filter relations by.'
+          schema:
+            type: string
+            format: uuid
+        - name: field_id
+          in: query
+          required: true
+          description: 'The ID of the relation field to filter relations by.'
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 'A list of relations.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Relation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /relations/{relationId}:
+    delete:
+      tags:
+        - Relations
+      summary: 'Delete Relation'
+      description: 'Deletes an existing relationship (edge).'
+      operationId: 'deleteRelation'
+      parameters:
+        - $ref: '#/components/parameters/relationId'
+      responses:
+        '204':
+          description: 'Relation deleted successfully.'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
   parameters:
     entityTypeId:
@@ -284,6 +358,14 @@ components:
       in: path
       required: true
       description: 'The ID of the field definition.'
+      schema:
+        type: string
+        format: uuid
+    relationId:
+      name: relationId
+      in: path
+      required: true
+      description: 'The ID of the relation (edge).'
       schema:
         type: string
         format: uuid
@@ -624,6 +706,62 @@ components:
       required:
         - data
         - version
+
+    # Relation Schemas
+    Relation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        field_id:
+          type: string
+          format: uuid
+          description: 'The ID of the relation field definition.'
+        from_record_id:
+          type: string
+          format: uuid
+          description: 'The ID of the source record in the relation.'
+        to_record_id:
+          type: string
+          format: uuid
+          description: 'The ID of the target record in the relation.'
+        createdBy:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - id
+        - field_id
+        - from_record_id
+        - to_record_id
+        - createdAt
+
+    RelationCreate:
+      type: object
+      properties:
+        field_id:
+          type: string
+          format: uuid
+          description: 'The ID of the relation field definition.'
+        from_record_id:
+          type: string
+          format: uuid
+          description: 'The ID of the source record in the relation.'
+        to_record_id:
+          type: string
+          format: uuid
+          description: 'The ID of the target record in the relation.'
+      required:
+        - field_id
+        - from_record_id
+        - to_record_id
 
     # Search Schemas
     SearchRequest:
