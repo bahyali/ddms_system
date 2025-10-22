@@ -2,8 +2,10 @@ import type { components } from '@ddms/sdk';
 import { useForm } from '@tanstack/react-form';
 import { buildValidators } from './validation';
 import { FieldControl } from './FieldControl';
+import { useEffect } from 'react';
 
 type FieldDef = components['schemas']['FieldDef'];
+type ValidationError = components['schemas']['ValidationErrorDetail'];
 
 export interface DynamicFormProps<TData extends Record<string, unknown>> {
   fieldDefs: FieldDef[];
@@ -12,6 +14,7 @@ export interface DynamicFormProps<TData extends Record<string, unknown>> {
   isLoading?: boolean;
   onCancel?: () => void;
   submitText?: string;
+  serverErrors?: ValidationError[] | null;
 }
 
 export function DynamicForm<TData extends Record<string, unknown>>({
@@ -21,6 +24,7 @@ export function DynamicForm<TData extends Record<string, unknown>>({
   isLoading,
   onCancel,
   submitText = 'Submit',
+  serverErrors,
 }: DynamicFormProps<TData>) {
   const form = useForm<TData>({
     defaultValues: initialData,
@@ -28,6 +32,16 @@ export function DynamicForm<TData extends Record<string, unknown>>({
       onSubmit(value);
     },
   });
+
+  useEffect(() => {
+    if (serverErrors) {
+      serverErrors.forEach((error) => {
+        if (error.path) {
+          form.setFieldError(error.path as any, error.message);
+        }
+      });
+    }
+  }, [serverErrors, form]);
 
   return (
     <form
