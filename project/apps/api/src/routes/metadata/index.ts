@@ -12,9 +12,6 @@ import {
 } from './schemas';
 
 const metadataRoutes: FastifyPluginAsync = async (fastify) => {
-  // A placeholder tenantId until authentication is implemented
-  const tenantId = '00000000-0000-0000-0000-000000000000';
-
   //
   // Entity Type Routes
   //
@@ -33,7 +30,7 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const entityTypes = await dal.findEntityTypesByTenant(
         request.db,
-        tenantId,
+        request.tenantId,
       );
       return reply.send(entityTypes);
     },
@@ -54,7 +51,7 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const newEntityType = await dal.createEntityType(
         request.db,
-        tenantId,
+        request.tenantId,
         request.body,
       );
       return reply.code(201).send(newEntityType);
@@ -79,7 +76,7 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
 
       const existing = await dal.findEntityTypeById(
         request.db,
-        tenantId,
+        request.tenantId,
         entityTypeId,
       );
       if (!existing) {
@@ -90,7 +87,7 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
 
       const updatedEntityType = await dal.updateEntityType(
         request.db,
-        tenantId,
+        request.tenantId,
         entityTypeId,
         request.body,
       );
@@ -119,7 +116,7 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
 
       const entityType = await dal.findEntityTypeById(
         request.db,
-        tenantId,
+        request.tenantId,
         entityTypeId,
       );
       if (!entityType) {
@@ -130,7 +127,7 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
 
       const fieldDefs = await dal.findFieldDefsByEntityType(
         request.db,
-        tenantId,
+        request.tenantId,
         entityTypeId,
       );
       return reply.send(fieldDefs);
@@ -155,7 +152,7 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
 
       const entityType = await dal.findEntityTypeById(
         request.db,
-        tenantId,
+        request.tenantId,
         entityTypeId,
       );
       if (!entityType) {
@@ -166,7 +163,7 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
 
       const newFieldDef = await dal.createFieldDef(
         request.db,
-        tenantId,
+        request.tenantId,
         entityTypeId,
         request.body,
       );
@@ -190,7 +187,11 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const { fieldId } = request.params;
 
-      const existing = await dal.findFieldDefById(request.db, tenantId, fieldId);
+      const existing = await dal.findFieldDefById(
+        request.db,
+        request.tenantId,
+        fieldId,
+      );
       if (!existing) {
         return reply
           .code(404)
@@ -199,7 +200,7 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
 
       const updatedFieldDef = await dal.updateFieldDef(
         request.db,
-        tenantId,
+        request.tenantId,
         fieldId,
         request.body,
       );
