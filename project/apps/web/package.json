@@ -3,11 +3,21 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "echo \"@ddms/web: no dev script specified\" && exit 0",
-    "lint": "eslint src --ext .ts,.tsx",
-    "test": "echo \"@ddms/web: no test specified\" && exit 0"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "@ddms/sdk": "workspace:*"
+    "@ddms/sdk": "workspace:*",
+    "next": "14.2.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.8",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "eslint-config-next": "14.2.4"
   }
 }
