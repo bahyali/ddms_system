@@ -1,0 +1,33 @@
+@startuml
+title Sequence Diagram: Record Search
+
+actor User
+participant "Frontend App" as FE
+participant "Backend API" as API
+participant "Filter Compiler" as Compiler
+participant "Data Access Layer" as DAL
+database "PostgreSQL DB" as DB
+
+User -> FE : Builds filter criteria in UI
+FE -> API : POST /entities/:type/search\n(Filter DSL JSON)
+
+activate API
+API -> Compiler : Compile(filterDSL)
+activate Compiler
+Compiler --> API : Returns { sql: "...", params: [...] }
+deactivate Compiler
+
+API -> DAL : findRecords(sql, params)
+activate DAL
+DAL -> DB : Executes parameterized SQL query
+activate DB
+DB --> DAL : Returns matching record rows
+deactivate DB
+DAL --> API : Returns records
+deactivate DAL
+
+API --> FE : 200 OK\n{ rows: [...], nextCursor: ... }
+deactivate API
+FE -> User : Displays filtered records in table
+
+@enduml
