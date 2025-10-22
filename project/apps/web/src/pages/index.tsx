@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import styles from '~/styles/Home.module.css';
 
 export default function Home() {
@@ -15,10 +16,11 @@ export default function Home() {
           Welcome to DDMS
         </h1>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>src/pages/index.tsx</code>
-        </p>
+        <div className={styles.description}>
+          <Link href="/admin/entity-types">
+            <button>Manage Entity Types</button>
+          </Link>
+        </div>
       </main>
     </div>
   );
