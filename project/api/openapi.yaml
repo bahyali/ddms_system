@@ -10,6 +10,8 @@ servers:
 tags:
   - name: Metadata
     description: 'Operations for managing Entity Types and Field Definitions.'
+  - name: Records
+    description: 'Operations for managing Records (instances of an Entity Type).'
 
 paths:
   /entity-types:
@@ -123,6 +125,108 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /entities/{entityTypeKey}:
+    post:
+      tags:
+        - Records
+      summary: 'Create Record'
+      description: 'Creates a new record for a given entity type.'
+      operationId: 'createRecord'
+      parameters:
+        - $ref: '#/components/parameters/entityTypeKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordCreate'
+      responses:
+        '201':
+          description: 'Record created successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /entities/{entityTypeKey}/search:
+    post:
+      tags:
+        - Records
+      summary: 'Search Records'
+      description: 'Searches for records of a given entity type using a filter.'
+      operationId: 'searchRecords'
+      parameters:
+        - $ref: '#/components/parameters/entityTypeKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: 'A list of matching records.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /entities/{entityTypeKey}/{recordId}:
+    get:
+      tags:
+        - Records
+      summary: 'Get Record by ID'
+      description: 'Retrieves a single record by its ID.'
+      operationId: 'getRecord'
+      parameters:
+        - $ref: '#/components/parameters/entityTypeKey'
+        - $ref: '#/components/parameters/recordId'
+      responses:
+        '200':
+          description: 'The requested record.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Records
+      summary: 'Update Record'
+      description: 'Updates an existing record. Uses optimistic locking via a version number.'
+      operationId: 'updateRecord'
+      parameters:
+        - $ref: '#/components/parameters/entityTypeKey'
+        - $ref: '#/components/parameters/recordId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordUpdate'
+      responses:
+        '200':
+          description: 'Record updated successfully.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
   /fields/{fieldId}:
     patch:
       tags:
@@ -160,6 +264,21 @@ components:
       schema:
         type: string
         format: uuid
+    entityTypeKey:
+      name: entityTypeKey
+      in: path
+      required: true
+      description: 'The unique machine-readable key for the entity type (e.g., "user", "project").'
+      schema:
+        type: string
+    recordId:
+      name: recordId
+      in: path
+      required: true
+      description: 'The ID of the record.'
+      schema:
+        type: string
+        format: uuid
     fieldId:
       name: fieldId
       in: path
@@ -178,6 +297,12 @@ components:
             $ref: '#/components/schemas/Error'
     NotFound:
       description: 'Not Found - The requested resource does not exist.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: 'Conflict - The request could not be completed due to a conflict with the current state of the resource, likely an optimistic locking failure.'
       content:
         application/json:
           schema:
@@ -425,6 +550,161 @@ components:
           type: array
           items:
             type: string
+
+    # Record Schemas
+    Record:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        entityTypeId:
+          type: string
+          format: uuid
+          readOnly: true
+        version:
+          type: integer
+          description: 'The version number of the record, used for optimistic locking.'
+          readOnly: true
+        data:
+          type: object
+          additionalProperties: true
+          description: 'A JSON object containing the custom field data for the record.'
+          example:
+            name: 'AI Roadmap Q4'
+            status: 'Active'
+            budget: 12000
+        createdBy:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        updatedBy:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - id
+        - entityTypeId
+        - version
+        - data
+        - createdAt
+        - updatedAt
+
+    RecordCreate:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+          description: 'A JSON object containing the custom field data for the new record.'
+      required:
+        - data
+
+    RecordUpdate:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+          description: 'A JSON object containing the fields to update.'
+        version:
+          type: integer
+          description: 'The current version of the record being updated, for optimistic locking.'
+      required:
+        - data
+        - version
+
+    # Search Schemas
+    SearchRequest:
+      type: object
+      properties:
+        filter:
+          $ref: '#/components/schemas/Filter'
+        sort:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sort'
+          description: 'An array of sort objects to apply to the results.'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 50
+          description: 'The maximum number of records to return.'
+        cursor:
+          type: string
+          nullable: true
+          description: 'A cursor for pagination, obtained from a previous search response.'
+
+    SearchResponse:
+      type: object
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/Record'
+        nextCursor:
+          type: string
+          nullable: true
+          description: 'A cursor to retrieve the next page of results. Null if there are no more results.'
+      required:
+        - rows
+
+    Sort:
+      type: object
+      properties:
+        field:
+          type: string
+          description: 'The key of the field to sort by (e.g., "budget", "createdAt").'
+        dir:
+          type: string
+          enum: [asc, desc]
+          default: asc
+      required:
+        - field
+
+    Filter:
+      type: object
+      description: |
+        A flexible filter object to query records. It can be a logical operator (`and`, `or`, `not`) or a field-level comparison.
+        See the manifest for the full grammar.
+      properties:
+        op:
+          type: string
+          description: 'The operator for the filter.'
+        filters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Filter'
+          description: 'Used with logical operators `and` and `or`.'
+        field:
+          type: string
+          description: 'The key of the field to compare.'
+        value:
+          description: 'The value to compare against.'
+        values:
+          type: array
+          description: 'An array of values for the `in` operator.'
+        query:
+          type: string
+          description: 'The search query for `fulltext` search.'
+      example:
+        op: 'and'
+        filters:
+          - { op: 'eq', field: 'status', value: 'Active' }
+          - { op: 'gte', field: 'budget', value: 10000 }
+          - { op: 'fulltext', query: 'ai roadmap' }
 
     # Error Schema
     Error:
