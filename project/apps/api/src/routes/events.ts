@@ -5,7 +5,7 @@ import { Client } from 'pg';
 interface EventPayload {
   type: string;
   tenant_id: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const eventsPlugin: FastifyPluginAsync = async (fastify) => {

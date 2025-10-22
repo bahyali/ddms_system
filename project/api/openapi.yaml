@@ -14,6 +14,8 @@ tags:
     description: 'Operations for managing Records (instances of an Entity Type).'
   - name: Relations
     description: 'Operations for managing relationships (edges) between Records.'
+  - name: Real-time
+    description: 'Operations for real-time event streaming.'
 
 paths:
   /entity-types:
@@ -327,6 +329,19 @@ paths:
           description: 'Relation deleted successfully.'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /events:
+    get:
+      tags:
+        - Real-time
+      summary: 'Subscribe to real-time events'
+      description: 'Establishes a Server-Sent Events (SSE) connection to receive real-time updates for the current tenant.'
+      operationId: 'subscribeToEvents'
+      responses:
+        '200':
+          description: 'SSE connection established.'
+          content:
+            text/event-stream: {}
 
 components:
   parameters:
