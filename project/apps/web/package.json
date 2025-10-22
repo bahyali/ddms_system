@@ -12,7 +12,7 @@
     "@ddms/sdk": "workspace:*",
     "@tanstack/react-query": "^5.51.1",
     "next": "14.2.4",
-    "openapi-fetch": "^0.9.9",
+    "openapi-fetch": "^0.15.0",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
