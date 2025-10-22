@@ -35,15 +35,20 @@ const EditRecordPage = () => {
         onSuccess: () => {
           router.push(`/entities/${key}`);
         },
-        onError: (error: any) => {
-          if (error.body?.errors) {
-            setServerErrors(error.body.errors);
-          } else if (error.status === 409) {
+        onError: (error: unknown) => {
+          const apiError = error as {
+            body?: { errors?: ValidationError[] };
+            status?: number;
+            message?: string;
+          };
+          if (apiError.body?.errors) {
+            setServerErrors(apiError.body.errors);
+          } else if (apiError.status === 409) {
             alert(
               'Conflict: This record has been updated by someone else. Please refresh and try again.'
             );
           } else {
-            alert(`Error updating record: ${error.message || 'An unknown error occurred'}`);
+            alert(`Error updating record: ${apiError.message || 'An unknown error occurred'}`);
           }
         },
       }

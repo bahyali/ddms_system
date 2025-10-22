@@ -31,11 +31,12 @@ const CreateRecordPage = () => {
         onSuccess: () => {
           router.push(`/entities/${key}`);
         },
-        onError: (error: any) => {
-          if (error.body?.errors) {
-            setServerErrors(error.body.errors);
+        onError: (error: unknown) => {
+          const apiError = error as { body?: { errors?: ValidationError[] }; message?: string };
+          if (apiError.body?.errors) {
+            setServerErrors(apiError.body.errors);
           } else {
-            alert(`Error creating record: ${error.message || 'An unknown error occurred'}`);
+            alert(`Error creating record: ${apiError.message || 'An unknown error occurred'}`);
           }
         },
       }

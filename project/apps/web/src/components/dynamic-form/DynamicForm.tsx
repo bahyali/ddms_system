@@ -37,7 +37,7 @@ export function DynamicForm<TData extends Record<string, unknown>>({
     if (serverErrors) {
       serverErrors.forEach((error) => {
         if (error.path) {
-          form.setFieldError(error.path as any, error.message);
+          form.setFieldError(error.path as never, error.message);
         }
       });
     }
