@@ -1,4 +1,4 @@
-import { z, ZodTypeAny } from 'zod';
+import { z, ZodTypeAny, AnyZodObject } from 'zod';
 import { fieldDefs } from '@ddms/db/schema';
 import { InferSelectModel } from 'drizzle-orm';
 
@@ -98,7 +98,9 @@ function buildZodTypeFromFieldDef(field: FieldDef): ZodTypeAny {
     }
 
     case 'date': {
-      let type = z.string().datetime({ message: 'Invalid ISO 8601 date format' });
+      let type = z
+        .string()
+        .datetime({ message: 'Invalid ISO 8601 date format' });
       const validationRules = z
         .object({ date: dateValidationSchema })
         .optional()
@@ -127,7 +129,9 @@ function buildZodTypeFromFieldDef(field: FieldDef): ZodTypeAny {
     case 'select': {
       const options = selectOptionsSchema.parse(field.options ?? {});
       if (!options?.enum) {
-        throw new Error(`'select' field '${field.key}' is missing enum options.`);
+        throw new Error(
+          `'select' field '${field.key}' is missing enum options.`,
+        );
       }
       const enumType = z.enum(options.enum as [string, ...string[]]);
       if (options.multiselect) {
@@ -155,9 +159,10 @@ function buildZodTypeFromFieldDef(field: FieldDef): ZodTypeAny {
       break;
     }
 
-    default:
+    default: {
       const exhaustiveCheck: never = field.kind;
       throw new Error(`Unsupported field kind: ${exhaustiveCheck}`);
+    }
   }
 
   if (!field.required) {
@@ -172,7 +177,7 @@ function buildZodTypeFromFieldDef(field: FieldDef): ZodTypeAny {
  * @param fields - An array of field definitions.
  * @returns A Zod object schema.
  */
-function buildSchemaFromFieldDefs(fields: FieldDef[]): z.ZodObject<any> {
+function buildSchemaFromFieldDefs(fields: FieldDef[]): AnyZodObject {
   const shape: Record<string, ZodTypeAny> = {};
 
   for (const field of fields) {
@@ -183,7 +188,7 @@ function buildSchemaFromFieldDefs(fields: FieldDef[]): z.ZodObject<any> {
 }
 
 // Memoization cache
-const schemaCache = new Map<string, z.ZodObject<any>>();
+const schemaCache = new Map<string, AnyZodObject>();
 
 /**
  * Gets a Zod validation schema for a given set of field definitions.
@@ -196,7 +201,7 @@ const schemaCache = new Map<string, z.ZodObject<any>>();
 export function getValidationSchema(
   cacheKey: string,
   fields: FieldDef[],
-): z.ZodObject<any> {
+): AnyZodObject {
   if (schemaCache.has(cacheKey)) {
     return schemaCache.get(cacheKey)!;
   }
