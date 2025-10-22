@@ -1,1 +1,1 @@
-export const db = () => 'Hello from @ddms/db';
+export * from './schema';
