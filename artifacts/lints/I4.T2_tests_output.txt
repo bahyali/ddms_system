@@ -1,0 +1,66 @@
+Scope: all 6 workspace projects
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│   Ignored build scripts: unrs-resolver.                                      │
+│   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+│   to run scripts.                                                            │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Done in 359ms using pnpm v10.19.0
+
+> ddms@1.0.0 test /Users/bahy/Documents/playground/capstone_project/server/projects/zentio_challenge/project
+> pnpm --parallel run test
+
+Scope: 5 of 6 workspace projects
+apps/api test$ echo "@ddms/api: no test specified" && exit 0
+packages/core test$ tsx --test src/**/*.test.ts
+packages/db test$ echo "@ddms/db: no test specified" && exit 0
+packages/sdk test$ echo "@ddms/sdk: no test specified" && exit 0
+apps/api test: @ddms/api: no test specified
+packages/db test: @ddms/db: no test specified
+apps/api test: Done
+packages/sdk test: @ddms/sdk: no test specified
+packages/db test: Done
+packages/sdk test: Done
+packages/core test: ▶ compileFilter
+packages/core test:   ✔ should handle null or empty filter (0.63525ms)
+packages/core test:   ✔ should compile an "eq" filter (0.107083ms)
+packages/core test:   ✔ should compile a "neq" filter (0.0525ms)
+packages/core test:   ✔ should compile a "gt" filter for a number (0.047834ms)
+packages/core test:   ✔ should compile a "gte" filter (0.050917ms)
+packages/core test:   ✔ should compile an "lt" filter (0.048833ms)
+packages/core test:   ✔ should compile an "lte" filter (0.044708ms)
+packages/core test:   ✔ should compile an "in" filter (0.046291ms)
+packages/core test:   ✔ should compile a "contains" filter (0.05275ms)
+packages/core test:   ✔ should compile a "fulltext" filter (0.067667ms)
+packages/core test:   ✔ should compile an "and" filter with multiple conditions (0.070083ms)
+packages/core test:   ✔ should compile an "or" filter with multiple conditions (0.055083ms)
+packages/core test:   ✔ should handle an empty "and" filter (0.034ms)
+packages/core test:   ✔ should compile a nested filter: (A AND B) OR C (0.0605ms)
+packages/core test:   ✔ should compile a nested filter: A AND (B OR C) (0.060875ms)
+packages/core test:   ✔ should throw an error for an unknown operator (0.211208ms)
+packages/core test: ✔ compileFilter (2.223959ms)
+packages/core test: ▶ getValidationSchema
+packages/core test:   ✔ should handle required and optional text fields (1.701834ms)
+packages/core test:   ✔ should handle text validation rules (minLen, maxLen, regex) (0.383541ms)
+packages/core test:   ✔ should handle number validation rules (min, max, integer) (0.243458ms)
+packages/core test:   ✔ should handle date validation (1.058958ms)
+packages/core test:   ✔ should handle boolean fields (0.148166ms)
+packages/core test:   ✔ should handle single-select fields (0.245292ms)
+packages/core test:   ✔ should handle multi-select fields (0.133708ms)
+packages/core test:   ✔ should handle relation fields (one and many) (0.248375ms)
+packages/core test:   ✔ should use memoized schema on subsequent calls (0.082458ms)
+packages/core test: ✔ getValidationSchema (4.779166ms)
+packages/core test: ℹ tests 25
+packages/core test: ℹ suites 2
+packages/core test: ℹ pass 25
+packages/core test: ℹ fail 0
+packages/core test: ℹ cancelled 0
+packages/core test: ℹ skipped 0
+packages/core test: ℹ todo 0
+packages/core test: ℹ duration_ms 118.940542
+packages/core test: Done

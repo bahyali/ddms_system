@@ -140,9 +140,9 @@ export interface components {
        */
       formula?: string;
       /** @description Conditional visibility rules for the UI. */
-      visibleIf?: Record<string, never>[];
+      visibleIf?: Record<string, unknown>[];
       /** @description Conditional requirement rules. */
-      requiredIf?: Record<string, never>[];
+      requiredIf?: Record<string, unknown>[];
     };
     /** @description Validation rules that depend on the field kind. */
     FieldDefValidate: {
@@ -192,7 +192,7 @@ export interface components {
        *   "budget": 12000
        * }
        */
-      data: Record<string, never>;
+      data: Record<string, unknown>;
       /**
        * Format: uuid
        * @readonly
@@ -216,11 +216,11 @@ export interface components {
     };
     RecordCreate: {
       /** @description A JSON object containing the custom field data for the new record. */
-      data: Record<string, never>;
+      data: Record<string, unknown>;
     };
     RecordUpdate: {
       /** @description A JSON object containing the fields to update. */
-      data: Record<string, never>;
+      data: Record<string, unknown>;
       /** @description The current version of the record being updated, for optimistic locking. */
       version: number;
     };
