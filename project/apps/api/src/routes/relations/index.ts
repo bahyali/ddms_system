@@ -58,7 +58,17 @@ const relationsRoutes: FastifyPluginAsync = async (fastify) => {
           toRecordId: to_record_id,
           // createdBy: request.user.id // TODO: Add user context later
         });
-        return reply.code(201).send(newEdge);
+
+        const responsePayload = {
+          id: newEdge.id,
+          field_id: newEdge.fieldId,
+          from_record_id: newEdge.fromRecordId,
+          to_record_id: newEdge.toRecordId,
+          createdBy: newEdge.createdBy,
+          createdAt: newEdge.createdAt.toISOString(),
+        };
+
+        return reply.code(201).send(responsePayload);
       } catch (err) {
         if (err instanceof PgError) {
           // unique_violation on the unique index
@@ -69,7 +79,10 @@ const relationsRoutes: FastifyPluginAsync = async (fastify) => {
             });
           }
           // Error raised from the edges_validate trigger
-          if (err.message.includes('edge target type mismatch') || err.message.includes('is not relation')) {
+          if (
+            err.message.includes('edge target type mismatch') ||
+            err.message.includes('is not relation')
+          ) {
             return reply.code(400).send({
               code: 'BAD_REQUEST',
               message: err.message,

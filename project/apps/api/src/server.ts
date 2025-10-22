@@ -9,7 +9,7 @@ import dbPlugin from './plugins/db';
 import healthRoutes from './routes/health';
 import metadataRoutes from './routes/metadata';
 import entitiesRoutes from './routes/entities';
-import relationsRoutes from './routes/relations'; // <-- Add this import
+import relationsRoutes from './routes/relations';
 import tenantContextPlugin from './plugins/tenant_context';
 
 export async function buildServer() {
@@ -33,7 +33,7 @@ export async function buildServer() {
   await server.register(healthRoutes);
   await server.register(metadataRoutes, { prefix: '/api/v1' });
   await server.register(entitiesRoutes, { prefix: '/api/v1/entities' });
-  await server.register(relationsRoutes, { prefix: '/api/v1' }); // <-- Add this line
+  await server.register(relationsRoutes, { prefix: '/api/v1' });
 
   return server;
 }
