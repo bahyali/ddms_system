@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, sql, SQL } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import * as schema from '@ddms/db';
 

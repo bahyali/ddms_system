@@ -8,6 +8,7 @@ import {
 import dbPlugin from './plugins/db';
 import healthRoutes from './routes/health';
 import metadataRoutes from './routes/metadata';
+import entitiesRoutes from './routes/entities';
 import tenantContextPlugin from './plugins/tenant_context';
 
 export async function buildServer() {
@@ -30,6 +31,7 @@ export async function buildServer() {
   await server.register(tenantContextPlugin);
   await server.register(healthRoutes);
   await server.register(metadataRoutes, { prefix: '/api/v1' });
+  await server.register(entitiesRoutes, { prefix: '/api/v1/entities' });
 
   return server;
 }

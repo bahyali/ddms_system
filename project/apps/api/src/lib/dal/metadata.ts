@@ -65,6 +65,26 @@ export async function findEntityTypeById(
 }
 
 /**
+ * Finds a single entity type by its key, ensuring it belongs to the correct tenant.
+ * @param db The Drizzle database instance.
+ * @param tenantId The ID of the tenant.
+ * @param key The key of the entity type to find.
+ * @returns The entity type, or undefined if not found.
+ */
+export async function findEntityTypeByKey(
+  db: Db,
+  tenantId: string,
+  key: string,
+) {
+  return db.query.entityTypes.findFirst({
+    where: and(
+      eq(schema.entityTypes.key, key),
+      eq(schema.entityTypes.tenantId, tenantId),
+    ),
+  });
+}
+
+/**
  * Updates an existing entity type.
  * @param db The Drizzle database instance.
  * @param tenantId The ID of the tenant.
