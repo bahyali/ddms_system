@@ -11,6 +11,7 @@ import metadataRoutes from './routes/metadata';
 import entitiesRoutes from './routes/entities';
 import relationsRoutes from './routes/relations';
 import tenantContextPlugin from './plugins/tenant_context';
+import eventsRoutes from './routes/events';
 
 export async function buildServer() {
   const server = fastify({
@@ -34,6 +35,7 @@ export async function buildServer() {
   await server.register(metadataRoutes, { prefix: '/api/v1' });
   await server.register(entitiesRoutes, { prefix: '/api/v1/entities' });
   await server.register(relationsRoutes, { prefix: '/api/v1' });
+  await server.register(eventsRoutes, { prefix: '/api/v1' });
 
   return server;
 }
