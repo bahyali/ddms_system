@@ -10,6 +10,12 @@
   "dependencies": {
     "@ddms/core": "workspace:*",
     "@ddms/db": "workspace:*",
-    "@ddms/sdk": "workspace:*"
+    "@ddms/sdk": "workspace:*",
+    "@fastify/cors": "^9.0.1",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.0"
+  },
+  "devDependencies": {
+    "pino-pretty": "^11.2.1"
   }
 }
