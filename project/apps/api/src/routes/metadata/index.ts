@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import * as dal from '../../lib/dal/metadata';
+import { hasPermission } from '../../lib/authz';
 import {
   createEntityTypeBodySchema,
   entityTypeSchema,
@@ -39,6 +40,14 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/entity-types',
     {
+      preHandler: async (request, reply) => {
+        if (!hasPermission(request.user, 'entity-type:create')) {
+          return reply.code(403).send({
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to create entity types.',
+          });
+        }
+      },
       schema: {
         tags: ['Metadata'],
         summary: 'Create Entity Type',
@@ -61,6 +70,14 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch(
     '/entity-types/:entityTypeId',
     {
+      preHandler: async (request, reply) => {
+        if (!hasPermission(request.user, 'entity-type:update')) {
+          return reply.code(403).send({
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to update entity types.',
+          });
+        }
+      },
       schema: {
         tags: ['Metadata'],
         summary: 'Update Entity Type',
@@ -137,6 +154,14 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/entity-types/:entityTypeId/fields',
     {
+      preHandler: async (request, reply) => {
+        if (!hasPermission(request.user, 'field-def:create')) {
+          return reply.code(403).send({
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to create field definitions.',
+          });
+        }
+      },
       schema: {
         tags: ['Metadata'],
         summary: 'Create Field Definition',
@@ -174,6 +199,14 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch(
     '/fields/:fieldId',
     {
+      preHandler: async (request, reply) => {
+        if (!hasPermission(request.user, 'field-def:update')) {
+          return reply.code(403).send({
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to update field definitions.',
+          });
+        }
+      },
       schema: {
         tags: ['Metadata'],
         summary: 'Update Field Definition',

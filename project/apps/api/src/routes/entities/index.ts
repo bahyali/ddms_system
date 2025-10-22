@@ -2,6 +2,11 @@ import { FastifyPluginAsync } from 'fastify';
 import { ZodError } from 'zod';
 import { sql } from 'drizzle-orm';
 import { getValidationSchema, compileFilter } from '@ddms/core';
+import {
+  hasPermission,
+  checkWritePermissions,
+  filterReadableFields,
+} from '../../lib/authz';
 import * as recordDal from '../../lib/dal/records';
 import * as metadataDal from '../../lib/dal/metadata';
 import * as schema from '@ddms/db';
@@ -73,7 +78,28 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const { entityType, fieldDefs } = request;
+      if (!hasPermission(request.user, 'record:create')) {
+        return reply.code(403).send({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to create records.',
+        });
+      }
+
+      const { entityType, fieldDefs, user } = request;
+
+      const forbiddenFields = checkWritePermissions(
+        user,
+        fieldDefs,
+        request.body.data,
+      );
+      if (forbiddenFields.length > 0) {
+        return reply.code(403).send({
+          code: 'FORBIDDEN',
+          message: `You do not have permission to write to the following fields: ${forbiddenFields.join(
+            ', ',
+          )}`,
+        });
+      }
       const validationSchema = getValidationSchema(entityType.id, fieldDefs);
       const validationResult = validationSchema.safeParse(request.body.data);
 
@@ -89,10 +115,11 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
         request.db,
         request.tenantId,
         entityType.id,
-        { data: validationResult.data },
+        { data: validationResult.data, createdBy: user.id },
       );
 
-      return reply.code(201).send(newRecord);
+      const filteredRecord = filterReadableFields(user, fieldDefs, newRecord);
+      return reply.code(201).send(filteredRecord);
     },
   );
 
@@ -109,7 +136,28 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const { entityType, fieldDefs } = request;
+      if (!hasPermission(request.user, 'record:create')) {
+        return reply.code(403).send({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to create records.',
+        });
+      }
+
+      const { entityType, fieldDefs, user } = request;
+
+      const forbiddenFields = checkWritePermissions(
+        user,
+        fieldDefs,
+        request.body.data,
+      );
+      if (forbiddenFields.length > 0) {
+        return reply.code(403).send({
+          code: 'FORBIDDEN',
+          message: `You do not have permission to write to the following fields: ${forbiddenFields.join(
+            ', ',
+          )}`,
+        });
+      }
       const { filter, sort, limit = 50, cursor } = request.body;
 
       if (sort && sort.length > 1) {
@@ -151,7 +199,7 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
         ? parseInt(Buffer.from(cursor, 'base64').toString('ascii'), 10)
         : 0;
 
-      const { rows, total } = await recordDal.searchRecords(
+      let { rows, total } = await recordDal.searchRecords(
         request.db,
         request.tenantId,
         entityType.id,
@@ -166,6 +214,10 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
         offset + rows.length < total
           ? Buffer.from(String(offset + limit)).toString('base64')
           : null;
+
+      rows = rows.map((row) =>
+        filterReadableFields(request.user, fieldDefs, row),
+      );
 
       return reply.send({ rows, nextCursor, total });
     },
@@ -196,7 +248,12 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
           .send({ code: 'NOT_FOUND', message: 'Record not found' });
       }
 
-      return reply.send(record);
+      const filteredRecord = filterReadableFields(
+        request.user,
+        request.fieldDefs,
+        record,
+      );
+      return reply.send(filteredRecord);
     },
   );
 
@@ -213,9 +270,26 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
+      if (!hasPermission(request.user, 'record:update')) {
+        return reply.code(403).send({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to update records.',
+        });
+      }
+
       const { recordId } = request.params;
       const { version, data } = request.body;
-      const { entityType, fieldDefs } = request;
+      const { entityType, fieldDefs, user } = request;
+
+      const forbiddenFields = checkWritePermissions(user, fieldDefs, data);
+      if (forbiddenFields.length > 0) {
+        return reply.code(403).send({
+          code: 'FORBIDDEN',
+          message: `You do not have permission to write to the following fields: ${forbiddenFields.join(
+            ', ',
+          )}`,
+        });
+      }
 
       const existingRecord = await recordDal.findRecordById(
         request.db,
@@ -259,7 +333,7 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
         request.tenantId,
         recordId,
         version,
-        { data: validationResult.data },
+        { data: validationResult.data, updatedBy: user.id },
       );
 
       if (!updatedRecord) {
@@ -271,7 +345,12 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
         });
       }
 
-      return reply.send(updatedRecord);
+      const filteredRecord = filterReadableFields(
+        user,
+        fieldDefs,
+        updatedRecord,
+      );
+      return reply.send(filteredRecord);
     },
   );
 };

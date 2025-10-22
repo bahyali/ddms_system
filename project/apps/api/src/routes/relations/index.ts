@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { PgError } from 'pg';
+import { hasPermission } from '../../lib/authz';
 import * as edgeDal from '../../lib/dal/edges';
 import * as recordDal from '../../lib/dal/records';
 import * as metadataDal from '../../lib/dal/metadata';
@@ -24,8 +25,15 @@ const relationsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
+      if (!hasPermission(request.user, 'relation:create')) {
+        return reply.code(403).send({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to create relations.',
+        });
+      }
+
       const { field_id, from_record_id, to_record_id } = request.body;
-      const { tenantId, db } = request;
+      const { tenantId, db, user } = request;
 
       // Pre-flight checks to ensure all referenced entities exist for this tenant.
       // This provides clearer error messages than relying solely on the DB trigger.
@@ -56,7 +64,7 @@ const relationsRoutes: FastifyPluginAsync = async (fastify) => {
           fieldId: field_id,
           fromRecordId: from_record_id,
           toRecordId: to_record_id,
-          // createdBy: request.user.id // TODO: Add user context later
+          createdBy: user.id,
         });
 
         const responsePayload = {
@@ -99,6 +107,14 @@ const relationsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.delete(
     '/relations/:relationId',
     {
+      preHandler: async (request, reply) => {
+        if (!hasPermission(request.user, 'relation:delete')) {
+          return reply.code(403).send({
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to delete relations.',
+          });
+        }
+      },
       schema: {
         tags: ['Relations'],
         summary: 'Delete Relation',
