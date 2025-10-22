@@ -9,9 +9,11 @@ import { useGetEntityTypeByKey } from '~/hooks/useEntityTypesApi';
 import { useGetFieldDefs } from '~/hooks/useFieldDefsApi';
 import { useGetRecords } from '~/hooks/useRecordsApi';
 import { DynamicTable } from '~/components/dynamic-table/DynamicTable';
+import { FilterBuilder } from '~/components/filter-builder/FilterBuilder';
 
 type Record = components['schemas']['Record'];
 type FieldDef = components['schemas']['FieldDef'];
+type Filter = components['schemas']['Filter'];
 
 const EntityRecordsPage = () => {
   const router = useRouter();
@@ -22,6 +24,8 @@ const EntityRecordsPage = () => {
     pageIndex: 0,
     pageSize: 10,
   });
+
+  const [filter, setFilter] = useState<Filter | null>(null);
 
   const {
     data: entityType,
@@ -48,7 +52,12 @@ const EntityRecordsPage = () => {
     entityTypeKey: key,
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
+    filter: filter ?? undefined,
   });
+
+  const searchableFields = useMemo(() => {
+    return fieldDefs?.filter((fd) => fd.searchable) ?? [];
+  }, [fieldDefs]);
 
   const columns = useMemo<ColumnDef<Record>[]>(() => {
     if (!fieldDefs) return [];
@@ -82,6 +91,13 @@ const EntityRecordsPage = () => {
         {isRecordsError && <p className="error">Error loading records: {recordsError.message}</p>}
 
         {isLoadingRecords && <p>Loading records...</p>}
+
+        {fieldDefs && (
+          <FilterBuilder
+            fieldDefs={searchableFields}
+            onApplyFilter={setFilter}
+          />
+        )}
         
         {recordsData && fieldDefs && (
           <DynamicTable
