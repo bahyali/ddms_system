@@ -14,7 +14,7 @@ interface FilterRule {
   id: string;
   fieldKey: string;
   operator: string;
-  value: any;
+  value: string;
 }
 
 const OPERATORS_BY_KIND: Record<
@@ -103,10 +103,17 @@ export function FilterBuilder({
     }
 
     const filters = rules
-      .filter((rule) => rule.fieldKey && rule.operator && rule.value !== '')
+      .filter((rule) => {
+        if (!rule.fieldKey || !rule.operator || rule.value === '') return false;
+        const fieldDef = fieldDefMap.get(rule.fieldKey);
+        if (fieldDef?.kind === 'number' && isNaN(parseFloat(rule.value))) {
+          return false; // Don't apply filter with invalid number
+        }
+        return true;
+      })
       .map((rule) => {
         const fieldDef = fieldDefMap.get(rule.fieldKey);
-        let coercedValue: any = rule.value;
+        let coercedValue: string | number | boolean = rule.value;
         if (fieldDef?.kind === 'number') {
           coercedValue = parseFloat(rule.value);
         } else if (fieldDef?.kind === 'boolean') {
