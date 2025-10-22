@@ -4,7 +4,7 @@ import type { components } from '@ddms/sdk';
 type FieldDef = components['schemas']['FieldDef'];
 
 interface FieldControlProps {
-  field: FieldApi<any, any, any, any>;
+  field: FieldApi<Record<string, unknown>, string, unknown, unknown>;
   fieldDef: FieldDef;
 }
 

@@ -7,14 +7,14 @@ type FieldDef = components['schemas']['FieldDef'];
 // into a format that TanStack Form can understand.
 export function buildValidators<TData>(
   fieldDef: FieldDef
-): FieldOptions<TData, any, any, any>['validators'] {
-  const validators: FieldOptions<TData, any, any, any>['validators'] = {};
+): FieldOptions<TData, string, unknown, unknown>['validators'] {
+  const validators: FieldOptions<TData, string, unknown, unknown>['validators'] = {};
 
-  const allValidators: any[] = [];
+  const allValidators: ((props: { value: unknown }) => string | undefined)[] = [];
 
   // Required validator
   if (fieldDef.required) {
-    allValidators.push(({ value }: { value: any }) => {
+    allValidators.push(({ value }: { value: unknown }) => {
       if (value === '' || value === null || value === undefined) {
         return 'This field is required';
       }
@@ -28,7 +28,7 @@ export function buildValidators<TData>(
   // Kind-specific validators
   if (fieldDef.kind === 'text' && fieldDef.validate?.text) {
     const { minLen, maxLen, regex } = fieldDef.validate.text;
-    allValidators.push(({ value }: { value: any }) => {
+    allValidators.push(({ value }: { value: unknown }) => {
       if (typeof value !== 'string' || value === '') return; // Don't validate if not a string or empty
       if (minLen && value.length < minLen) {
         return `Must be at least ${minLen} characters`;
@@ -45,7 +45,7 @@ export function buildValidators<TData>(
 
   if (fieldDef.kind === 'number' && fieldDef.validate?.number) {
     const { min, max, integer } = fieldDef.validate.number;
-    allValidators.push(({ value }: { value: any }) => {
+    allValidators.push(({ value }: { value: unknown }) => {
       if (value === null || value === undefined || value === '') return; // Don't validate if empty
       const numValue = Number(value);
       if (isNaN(numValue)) return 'Must be a number';
@@ -63,7 +63,7 @@ export function buildValidators<TData>(
   }
 
   if (allValidators.length > 0) {
-    validators.onChange = (props: { value: any }) => {
+    validators.onChange = (props: { value: unknown }) => {
       for (const validator of allValidators) {
         const error = validator(props);
         if (error) return error;

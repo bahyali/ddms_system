@@ -5,7 +5,7 @@ import { FieldControl } from './FieldControl';
 
 type FieldDef = components['schemas']['FieldDef'];
 
-export interface DynamicFormProps<TData extends Record<string, any>> {
+export interface DynamicFormProps<TData extends Record<string, unknown>> {
   fieldDefs: FieldDef[];
   onSubmit: (data: TData) => void;
   initialData?: TData;
@@ -14,7 +14,7 @@ export interface DynamicFormProps<TData extends Record<string, any>> {
   submitText?: string;
 }
 
-export function DynamicForm<TData extends Record<string, any>>({
+export function DynamicForm<TData extends Record<string, unknown>>({
   fieldDefs,
   onSubmit,
   initialData,
@@ -40,7 +40,7 @@ export function DynamicForm<TData extends Record<string, any>>({
       {fieldDefs.map((fieldDef) => (
         <form.Field
           key={fieldDef.key}
-          name={fieldDef.key as any}
+          name={fieldDef.key as keyof TData}
           validators={buildValidators<TData>(fieldDef)}
         >
           {(field) => (
