@@ -1,1 +1,1 @@
-export const core = () => 'Hello from @ddms/core';
+export * from './validation';
