@@ -1,5 +1,4 @@
 import { FastifyPluginAsync } from 'fastify';
-import { z } from 'zod';
 import * as dal from '../../lib/dal/metadata';
 import {
   createEntityTypeBodySchema,
@@ -27,7 +26,7 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
         tags: ['Metadata'],
         summary: 'List Entity Types',
         response: {
-          200: z.array(entityTypeSchema),
+          200: entityTypeSchema.array(),
         },
       },
     },
@@ -111,7 +110,7 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
         summary: 'List Field Definitions',
         params: entityTypeIdParamsSchema,
         response: {
-          200: z.array(fieldDefSchema),
+          200: fieldDefSchema.array(),
         },
       },
     },
