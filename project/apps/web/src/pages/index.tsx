@@ -16,9 +16,12 @@ export default function Home() {
           Welcome to DDMS
         </h1>
 
-        <div className={styles.description}>
+        <div className={styles.description} style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'center' }}>
           <Link href="/admin/entity-types">
             <button>Manage Entity Types</button>
+          </Link>
+          <Link href="/entities/project">
+            <button style={{ backgroundColor: '#5cb85c' }}>View Projects</button>
           </Link>
         </div>
       </main>

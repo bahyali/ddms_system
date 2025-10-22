@@ -45,6 +45,23 @@ export const useGetEntityType = (id: string) => {
   });
 };
 
+// Hook to get a single entity type by Key
+export const useGetEntityTypeByKey = (key: string) => {
+  return useQuery({
+    queryKey: [...entityTypesKeys.lists(), 'by-key', key],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/entity-types');
+      if (error) throw error;
+      const entityType = data?.find((et) => et.key === key);
+      if (!entityType) {
+        throw new Error(`Entity type with key "${key}" not found`);
+      }
+      return entityType;
+    },
+    enabled: !!key,
+  });
+};
+
 // Hook to create an entity type
 export const useCreateEntityType = () => {
   const queryClient = useQueryClient();
