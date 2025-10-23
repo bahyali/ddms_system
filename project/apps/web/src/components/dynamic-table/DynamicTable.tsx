@@ -49,81 +49,81 @@ export function DynamicTable<TData>({
   return (
     <div className="stack">
       <div className="table-wrapper">
-        <table>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                  : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.length > 0 ? (
-            table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                role={getRecordHref ? 'button' : undefined}
-                tabIndex={getRecordHref ? 0 : undefined}
-                onClick={() => handleRowClick(row.original)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    handleRowClick(row.original);
-                  }
-                }}
-                style={getRecordHref ? { cursor: 'pointer' } : undefined}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
+        <table className="data-table">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </th>
                 ))}
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={columns.length} style={{ textAlign: 'center' }}>
-                No records found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  role={getRecordHref ? 'button' : undefined}
+                  tabIndex={getRecordHref ? 0 : undefined}
+                  onClick={() => handleRowClick(row.original)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      handleRowClick(row.original);
+                    }
+                  }}
+                  className={getRecordHref ? 'data-table__row--interactive' : undefined}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} style={{ textAlign: 'center' }}>
+                  No records found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
 
-      <div className="pagination">
-        <button
-          type="button"
-          className="button secondary"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </button>
-        <span className="helper-text">
-          Page{' '}
-          <strong>
-            {table.getState().pagination.pageIndex + 1} of{' '}
-            {table.getPageCount() === 0 ? 1 : table.getPageCount()}
-          </strong>
-        </span>
-        <button
-          type="button"
-          className="button secondary"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </button>
-      </div>
+        <div className="pagination">
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </button>
+          <span className="helper-text">
+            Page{' '}
+            <strong>
+              {table.getState().pagination.pageIndex + 1} of{' '}
+              {table.getPageCount() === 0 ? 1 : table.getPageCount()}
+            </strong>
+          </span>
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );

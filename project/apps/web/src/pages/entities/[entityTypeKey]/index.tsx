@@ -7,8 +7,12 @@ import type { components } from '@ddms/sdk';
 
 import { AppLayout } from '~/components/layout/AppLayout';
 import { DynamicTable } from '~/components/dynamic-table/DynamicTable';
+import { FieldValueDisplay } from '~/components/dynamic-table/FieldValueDisplay';
 import { FilterBuilder } from '~/components/filter-builder/FilterBuilder';
-import { useGetEntityTypeByKey } from '~/hooks/useEntityTypesApi';
+import {
+  useGetEntityTypeByKey,
+  useGetEntityTypes,
+} from '~/hooks/useEntityTypesApi';
 import { useGetFieldDefs } from '~/hooks/useFieldDefsApi';
 import { useGetRecords } from '~/hooks/useRecordsApi';
 
@@ -53,36 +57,69 @@ const EntityRecordsPage = () => {
     filter: filter ?? undefined,
   });
 
+  const { data: allEntityTypes } = useGetEntityTypes();
+
+  const entityTypesById = useMemo(() => {
+    const map = new Map<string, { key: string; label: string }>();
+    allEntityTypes?.forEach((item) => {
+      map.set(item.id, { key: item.key, label: item.label });
+    });
+    return map;
+  }, [allEntityTypes]);
+
   const searchableFields = useMemo(
     () => fieldDefs?.filter((fd) => fd.searchable) ?? [],
     [fieldDefs],
   );
 
   const columns = useMemo<ColumnDef<RecordRow>[]>(() => {
-    if (!fieldDefs || fieldDefs.length === 0) {
+    const fieldColumns =
+      fieldDefs?.map((field) => ({
+        id: `field-${field.key}`,
+        header: field.label,
+        cell: ({ row }: { row: { original: RecordRow } }) => (
+          <FieldValueDisplay
+            fieldDef={field}
+            value={(row.original.data as Record<string, unknown> | undefined)?.[
+              field.key
+            ]}
+            entityTypesById={entityTypesById}
+          />
+        ),
+      })) ?? [];
+
+    const baseColumn: ColumnDef<RecordRow> = {
+      id: 'record',
+      header: 'Record',
+      cell: ({ row }) => {
+        const record = row.original;
+        const primaryLabel = deriveRecordLabel(record, fieldDefs);
+        const updated = formatDateForDisplay(record.updatedAt);
+        return (
+          <div className="stack-sm">
+            <strong>{primaryLabel}</strong>
+            <span className="helper-text">
+              <code>{record.id}</code>
+              {updated ? ` • Updated ${updated}` : null}
+            </span>
+          </div>
+        );
+      },
+    };
+
+    if (fieldColumns.length === 0) {
       return [
+        baseColumn,
         {
-          accessorKey: 'id',
+          id: 'record-id',
           header: 'Record ID',
-          cell: (info) => (
-            <code>{String(info.getValue() ?? '').slice(0, 8)}…</code>
-          ),
+          cell: ({ row }) => <code>{truncateId(row.original.id)}</code>,
         },
       ];
     }
 
-    return fieldDefs.map((field) => ({
-      accessorKey: `data.${field.key}`,
-      header: field.label,
-      cell: (info) => {
-        const value = info.getValue();
-        if (Array.isArray(value)) {
-          return value.join(', ');
-        }
-        return value !== undefined && value !== null ? String(value) : '—';
-      },
-    }));
-  }, [fieldDefs]);
+    return [baseColumn, ...fieldColumns];
+  }, [entityTypesById, fieldDefs]);
 
   const pageCount = recordsData?.total
     ? Math.ceil(recordsData.total / pagination.pageSize)
@@ -231,3 +268,47 @@ const EntityRecordsPage = () => {
 };
 
 export default EntityRecordsPage;
+
+function truncateId(value: string, size = 8) {
+  if (value.length <= size) return value;
+  return `${value.slice(0, size)}…`;
+}
+
+function deriveRecordLabel(
+  record: RecordRow,
+  fieldDefs?: components['schemas']['FieldDef'][] | null,
+) {
+  if (typeof record.label === 'string' && record.label.trim().length > 0) {
+    return record.label;
+  }
+  const data = (record.data ?? {}) as Record<string, unknown>;
+  const fallbackKeys = ['name', 'title', 'label'];
+  for (const key of fallbackKeys) {
+    const candidate = data[key];
+    if (typeof candidate === 'string' && candidate.trim().length > 0) {
+      return candidate;
+    }
+  }
+  if (fieldDefs && fieldDefs.length > 0) {
+    const textField = fieldDefs.find((field) => field.kind === 'text');
+    if (textField) {
+      const candidate = data[textField.key];
+      if (typeof candidate === 'string' && candidate.trim().length > 0) {
+        return candidate;
+      }
+    }
+  }
+  return truncateId(record.id, 12);
+}
+
+function formatDateForDisplay(raw?: string | null) {
+  if (!raw) return null;
+  const date = new Date(raw);
+  if (Number.isNaN(date.valueOf())) {
+    return null;
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+}

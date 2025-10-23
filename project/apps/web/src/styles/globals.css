@@ -395,6 +395,24 @@ tbody tr:hover {
   background: var(--surface);
 }
 
+.data-table tbody td {
+  vertical-align: top;
+}
+
+.data-table__row--interactive {
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.data-table__row--interactive:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.4);
+  outline-offset: -2px;
+}
+
+.data-table__row--interactive:hover {
+  transform: translateY(-1px);
+}
+
 .pagination {
   display: flex;
   align-items: center;
@@ -499,6 +517,37 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+.chip--muted {
+  background: var(--surface-subtle);
+  color: var(--text-muted);
+}
+
+.chip--interactive {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--brand);
+  border: 1px solid rgba(37, 99, 235, 0.24);
+  text-decoration: none;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chip--interactive:hover {
+  background: rgba(37, 99, 235, 0.18);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.chip-prefix {
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
+
+.value-strong {
+  font-weight: 600;
+  color: var(--text);
 }
 
 .hero {
