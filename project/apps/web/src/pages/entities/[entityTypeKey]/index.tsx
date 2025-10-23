@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ColumnDef, PaginationState } from '@tanstack/react-table';
 import type { components } from '@ddms/sdk';
 
@@ -29,6 +29,13 @@ const EntityRecordsPage = () => {
     pageSize: 10,
   });
   const [filter, setFilter] = useState<Filter | null>(null);
+  const [savedViewsOpen, setSavedViewsOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    setFilter(null);
+    setPagination({ pageIndex: 0, pageSize: 10 });
+  }, [key]);
 
   const {
     data: entityType,
@@ -182,14 +189,29 @@ const EntityRecordsPage = () => {
                 Favorite your go-to combinations of filters and sorts. They stay synced for the team.
               </p>
             </div>
-            <button type="button" className="button secondary" disabled>
-              Save current view
-            </button>
+            <div className="row">
+              <button
+                type="button"
+                className="button secondary"
+                onClick={() => setSavedViewsOpen((previous) => !previous)}
+              >
+                {savedViewsOpen ? 'Collapse' : 'Expand'}
+              </button>
+              <button type="button" className="button secondary" disabled>
+                Save current view
+              </button>
+            </div>
           </div>
-          <div className="empty-state" style={{ marginTop: 'var(--space-4)' }}>
-            <h3>No saved views yet</h3>
-            <p>Create a filter and we&apos;ll remember it for next time.</p>
-          </div>
+          {savedViewsOpen ? (
+            <div className="empty-state" style={{ marginTop: 'var(--space-4)' }}>
+              <h3>No saved views yet</h3>
+              <p>Create a filter and we&apos;ll remember it for next time.</p>
+            </div>
+          ) : (
+            <p className="helper-text" style={{ marginTop: 'var(--space-3)' }}>
+              Expand to manage saved views once they&apos;re available.
+            </p>
+          )}
         </section>
 
         <section className="surface-card stack">
@@ -200,25 +222,48 @@ const EntityRecordsPage = () => {
                 Combine conditions across field types. Re-run frequently used filters via saved views.
               </p>
             </div>
-            <button
-              type="button"
-              className="button secondary"
-              onClick={() => setFilter(null)}
-            >
-              Clear filters
-            </button>
+            <div className="row">
+              <button
+                type="button"
+                className="button secondary"
+                onClick={() => setFilter(null)}
+              >
+                Clear filters
+              </button>
+              <button
+                type="button"
+                className="button secondary"
+                onClick={() => setFiltersOpen((previous) => !previous)}
+              >
+                {filtersOpen ? 'Collapse' : 'Expand'}
+              </button>
+            </div>
           </div>
-          {isLoadingFieldDefs && (
-            <p className="helper-text">Loading field definitions…</p>
-          )}
-          {!isLoadingFieldDefs && searchableFields.length === 0 && (
+          {filtersOpen ? (
+            <>
+              {isLoadingFieldDefs && (
+                <p className="helper-text">Loading field definitions…</p>
+              )}
+              {!isLoadingFieldDefs && searchableFields.length === 0 && (
+                <p className="helper-text">
+                  No searchable fields yet. Mark fields as searchable from the Entity Type screen to
+                  unlock quick filtering.
+                </p>
+              )}
+              {searchableFields.length > 0 && (
+                <FilterBuilder
+                  key={key}
+                  fieldDefs={searchableFields}
+                  onApplyFilter={setFilter}
+                />
+              )}
+            </>
+          ) : (
             <p className="helper-text">
-              No searchable fields yet. Mark fields as searchable from the Entity Type screen to
-              unlock quick filtering.
+              {filter
+                ? 'A filter is active. Expand to adjust or clear it.'
+                : 'Expand to configure filters for this entity.'}
             </p>
-          )}
-          {searchableFields.length > 0 && (
-            <FilterBuilder fieldDefs={searchableFields} onApplyFilter={setFilter} />
           )}
         </section>
 

@@ -39,8 +39,8 @@ export async function buildServer() {
       transport:
         process.env.NODE_ENV !== 'production'
           ? {
-              target: 'pino-pretty',
-            }
+            target: 'pino-pretty',
+          }
           : undefined,
     },
   }).withTypeProvider<ZodTypeProvider>();
@@ -121,6 +121,12 @@ export async function buildServer() {
   await server.register(relationsRoutes, { prefix: '/api/v1' });
   await server.register(eventsRoutes, { prefix: '/api/v1/events' });
   await server.register(indexesRoutes, { prefix: '/api/v1' });
+
+  server.ready(err => {
+    if (err) throw err;
+    console.log('Available routes:');
+    console.log(server.printRoutes());
+  });
 
   return server;
 }

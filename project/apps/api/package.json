@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "lint": "eslint src --ext .ts",
+    "seed": "tsx src/scripts/seed.ts",
     "test": "tsx --test src/**/*.test.ts"
   },
   "dependencies": {
+    "@faker-js/faker": "^9.0.0",
     "@ddms/core": "workspace:*",
     "@ddms/db": "workspace:*",
     "@ddms/sdk": "workspace:*",

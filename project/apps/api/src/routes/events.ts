@@ -1,5 +1,4 @@
 import { FastifyPluginAsync, FastifyReply } from 'fastify';
-import fp from 'fastify-plugin';
 import { Client } from 'pg';
 
 interface EventPayload {
@@ -98,10 +97,17 @@ const eventsPlugin: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
+      const origin = request.headers.origin ?? '*';
+      reply.header('Access-Control-Allow-Origin', origin);
+      if (origin !== '*') {
+        reply.header('Vary', 'Origin');
+        reply.header('Access-Control-Allow-Credentials', 'true');
+      }
+
       // Set SSE headers
-      reply.raw.setHeader('Content-Type', 'text/event-stream');
-      reply.raw.setHeader('Connection', 'keep-alive');
-      reply.raw.setHeader('Cache-Control', 'no-cache');
+      reply.header('Content-Type', 'text/event-stream');
+      reply.header('Connection', 'keep-alive');
+      reply.header('Cache-Control', 'no-cache');
       reply.raw.flushHeaders(); // Important to send headers immediately
 
       const { tenantId } = request;
@@ -143,7 +149,9 @@ const eventsPlugin: FastifyPluginAsync = async (fastify) => {
   });
 };
 
-export default fp(eventsPlugin, {
-  name: 'sse-broadcaster',
-  dependencies: ['tenantContext'],
-});
+// export default fp(eventsPlugin, {
+//   name: 'sse-broadcaster',
+//   dependencies: ['tenantContext'],
+// });
+
+export default eventsPlugin;
