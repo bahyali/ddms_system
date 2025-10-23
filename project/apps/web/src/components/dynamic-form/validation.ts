@@ -57,6 +57,21 @@ export function buildValidator(fieldDef: FieldDef): FieldValidator {
     });
   }
 
+  if (fieldDef.kind === 'relation') {
+    const uuidPattern = /^[0-9a-fA-F-]{36}$/;
+    validators.push((value) => {
+      if (value === null || value === undefined || value === '') return undefined;
+      if (Array.isArray(value)) {
+        const invalid = value.some((item) => typeof item !== 'string' || !uuidPattern.test(item));
+        return invalid ? 'Each relation must be a UUID' : undefined;
+      }
+      if (typeof value !== 'string' || !uuidPattern.test(value)) {
+        return 'Must be a valid UUID';
+      }
+      return undefined;
+    });
+  }
+
   return (value) => {
     for (const validator of validators) {
       const error = validator(value);

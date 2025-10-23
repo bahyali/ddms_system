@@ -17,6 +17,7 @@ const rbacRules: Record<string, string[]> = {
   'entity-type:update': ['admin', 'builder'],
   'field-def:create': ['admin', 'builder'],
   'field-def:update': ['admin', 'builder'],
+  'field-def:delete': ['admin', 'builder'],
   'record:create': ['admin', 'builder', 'contributor'],
   'record:update': ['admin', 'builder', 'contributor'],
   'record:delete': ['admin', 'builder'],

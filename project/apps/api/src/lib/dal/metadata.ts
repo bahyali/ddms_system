@@ -206,3 +206,20 @@ export async function updateFieldDef(
     .returning();
   return result;
 }
+
+export async function deleteFieldDef(
+  db: Db,
+  tenantId: string,
+  fieldDefId: string,
+) {
+  const [result] = await db
+    .delete(schema.fieldDefs)
+    .where(
+      and(
+        eq(schema.fieldDefs.id, fieldDefId),
+        eq(schema.fieldDefs.tenantId, tenantId),
+      ),
+    )
+    .returning();
+  return result;
+}

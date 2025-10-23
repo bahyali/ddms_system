@@ -12,6 +12,8 @@ import {
   updateFieldDefBodySchema,
 } from './schemas';
 import { recordAuditEvent } from '../../lib/audit';
+import * as schema from '@ddms/db';
+import { and, eq, sql } from 'drizzle-orm';
 
 const metadataRoutes: FastifyPluginAsync = async (fastify) => {
   //
@@ -304,6 +306,73 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
       });
 
       return reply.send(updatedFieldDef);
+    },
+  );
+
+  fastify.delete(
+    '/fields/:fieldId',
+    {
+      preHandler: async (request, reply) => {
+        if (!hasPermission(request.user, 'field-def:delete')) {
+          return reply.code(403).send({
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to delete field definitions.',
+          });
+        }
+      },
+      schema: {
+        tags: ['Metadata'],
+        summary: 'Delete Field Definition',
+        params: fieldIdParamsSchema,
+        response: {
+          204: { type: 'null', description: 'Field deleted successfully.' },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { fieldId } = request.params;
+
+      const existing = await dal.findFieldDefById(
+        request.db,
+        request.tenantId,
+        fieldId,
+      );
+      if (!existing) {
+        return reply
+          .code(404)
+          .send({ code: 'NOT_FOUND', message: 'Field definition not found' });
+      }
+
+      const [{ count }] = await request.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.records)
+        .where(
+          and(
+            eq(schema.records.tenantId, request.tenantId),
+            eq(schema.records.entityTypeId, existing.entityTypeId),
+          ),
+        );
+
+      if ((count ?? 0) > 0) {
+        return reply.code(409).send({
+          code: 'CONFLICT',
+          message:
+            'Cannot delete field while records exist for this entity type. Please remove or migrate data first.',
+        });
+      }
+
+      await dal.deleteFieldDef(request.db, request.tenantId, fieldId);
+
+      await recordAuditEvent(request.db, fastify.log, {
+        tenantId: request.tenantId,
+        actorId: request.user.id,
+        action: 'field_def.deleted',
+        resourceType: 'field_def',
+        resourceId: fieldId,
+        meta: { entityTypeId: existing.entityTypeId, key: existing.key },
+      });
+
+      return reply.code(204).send();
     },
   );
 };

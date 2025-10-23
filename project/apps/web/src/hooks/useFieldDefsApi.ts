@@ -4,6 +4,7 @@ import type { components } from '@ddms/sdk';
 
 type FieldDefCreate = components['schemas']['FieldDefCreate'];
 type FieldDefUpdate = components['schemas']['FieldDefUpdate'];
+type FieldDef = components['schemas']['FieldDef'];
 
 // Query Keys
 const fieldDefsKeys = {
@@ -63,6 +64,22 @@ export const useUpdateFieldDef = (entityTypeId: string) => {
       return data;
     },
     onSuccess: (_data, _variables) => {
+      queryClient.invalidateQueries({ queryKey: fieldDefsKeys.lists(entityTypeId) });
+    },
+  });
+};
+
+export const useDeleteFieldDef = (entityTypeId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (field: FieldDef) => {
+      const { error } = await api.DELETE('/fields/{fieldId}', {
+        params: { path: { fieldId: field.id } },
+      });
+      if (error) throw error;
+      return field;
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: fieldDefsKeys.lists(entityTypeId) });
     },
   });

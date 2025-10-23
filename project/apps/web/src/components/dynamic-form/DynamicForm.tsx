@@ -18,6 +18,7 @@ export interface DynamicFormProps<TData extends Record<string, unknown>> {
   onCancel?: () => void;
   submitText?: string;
   serverErrors?: ValidationError[] | null;
+  entityTypesById?: Map<string, { key: string; label: string }>;
 }
 
 function initialValueForField(fieldDef: FieldDef, existingValue: unknown) {
@@ -31,6 +32,10 @@ function initialValueForField(fieldDef: FieldDef, existingValue: unknown) {
       return fieldDef.options?.multiselect ? [] : '';
     case 'number':
       return '';
+    case 'relation': {
+      const relationOptions = (fieldDef.options as { relation?: { cardinality?: string } })?.relation;
+      return relationOptions?.cardinality === 'many' ? [] : '';
+    }
     default:
       return '';
   }
@@ -44,6 +49,7 @@ export function DynamicForm<TData extends Record<string, unknown>>({
   onCancel,
   submitText = 'Submit',
   serverErrors,
+  entityTypesById,
 }: DynamicFormProps<TData>) {
   const [formValues, setFormValues] = useState<FormState>({ ...initialData });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -163,15 +169,38 @@ export function DynamicForm<TData extends Record<string, unknown>>({
       return;
     }
 
-    const payload = fieldDefs.reduce<FormState>((accumulator, fieldDef) => {
+    const payload: FormState = {};
+    for (const fieldDef of fieldDefs) {
       const rawValue = formValues[fieldDef.key];
       const value =
         rawValue !== undefined
           ? rawValue
           : initialValueForField(fieldDef, rawValue);
-      accumulator[fieldDef.key] = value;
-      return accumulator;
-    }, {});
+
+      const isEmptyString = typeof value === 'string' && value.trim() === '';
+      const isEmptyArray = Array.isArray(value) && value.length === 0;
+      const isNullish = value === null || value === undefined;
+
+      if (fieldDef.kind === 'relation') {
+        if (isNullish || isEmptyString || isEmptyArray) {
+          if (fieldDef.required) {
+            payload[fieldDef.key] = value;
+          }
+          continue;
+        }
+        payload[fieldDef.key] = value;
+        continue;
+      }
+
+      if (isNullish || isEmptyString || isEmptyArray) {
+        if (fieldDef.required) {
+          payload[fieldDef.key] = value;
+        }
+        continue;
+      }
+
+      payload[fieldDef.key] = value;
+    }
 
     onSubmit(payload as TData);
   };
@@ -194,6 +223,7 @@ export function DynamicForm<TData extends Record<string, unknown>>({
               error={isTouched ? error : undefined}
               onChange={(nextValue) => handleFieldChange(fieldKey, nextValue)}
               onBlur={() => handleFieldBlur(fieldKey)}
+              entityTypesById={entityTypesById}
             />
             {isTouched && error && (
               <em id={`${fieldKey}-error`} style={{ color: '#d32f2f', fontSize: '0.875rem' }}>

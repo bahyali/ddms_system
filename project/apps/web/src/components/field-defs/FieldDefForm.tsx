@@ -20,6 +20,8 @@ interface FormState {
   multiselect?: boolean;
   readRoles: string[];
   writeRoles: string[];
+  relationTargetEntityTypeId?: string;
+  relationCardinality: 'one' | 'many';
 }
 
 const KINDS: FieldDefCreate['kind'][] = [
@@ -46,6 +48,8 @@ const INITIAL_FORM_STATE: FormState = {
   multiselect: false,
   readRoles: ['admin', 'builder', 'contributor', 'viewer'],
   writeRoles: ['admin', 'builder'],
+  relationTargetEntityTypeId: undefined,
+  relationCardinality: 'one',
 };
 
 const AVAILABLE_ROLES = ['admin', 'builder', 'contributor', 'viewer'] as const;
@@ -55,6 +59,7 @@ interface FieldDefFormProps {
   onSubmit: (data: FieldDefCreate | FieldDefUpdate) => void;
   isLoading: boolean;
   onCancel: () => void;
+  entityTypes?: Array<{ id: string; label: string }>;
 }
 
 export const FieldDefForm = ({
@@ -62,6 +67,7 @@ export const FieldDefForm = ({
   onSubmit,
   isLoading,
   onCancel,
+  entityTypes,
 }: FieldDefFormProps) => {
   const [formState, setFormState] = useState<FormState>(INITIAL_FORM_STATE);
   const isEditMode = Boolean(initialData);
@@ -91,6 +97,10 @@ export const FieldDefForm = ({
           (initialData.acl as { write?: string[] } | undefined)?.write?.length
             ? ((initialData.acl as { write?: string[] } | undefined)?.write as string[])
             : ['admin', 'builder'],
+        relationTargetEntityTypeId: (initialData.options as { relation?: { target_entity_type_id?: string } })?.relation?.target_entity_type_id,
+        relationCardinality:
+          ((initialData.options as { relation?: { cardinality?: 'one' | 'many' } })?.relation
+            ?.cardinality as 'one' | 'many' | undefined) ?? 'one',
       });
     } else {
       setFormState(INITIAL_FORM_STATE);
@@ -159,6 +169,21 @@ export const FieldDefForm = ({
       read: formState.readRoles,
       write: formState.writeRoles,
     };
+
+    if (formState.kind === 'relation') {
+      if (!formState.relationTargetEntityTypeId) {
+        alert('Please choose a target entity type for the relation.');
+        return;
+      }
+
+      payload.options = {
+        ...(payload.options ?? {}),
+        relation: {
+          target_entity_type_id: formState.relationTargetEntityTypeId,
+          cardinality: formState.relationCardinality,
+        },
+      };
+    }
 
     onSubmit(payload as FieldDefCreate | FieldDefUpdate);
   };
@@ -344,6 +369,57 @@ export const FieldDefForm = ({
           </label>
 
           {renderKindSpecificFields()}
+
+          {formState.kind === 'relation' && (
+            <div className="surface-card surface-card--muted stack">
+              <h4 style={{ margin: 0 }}>Relation settings</h4>
+              <p className="helper-text">
+                Choose which entity this relation points to and whether it stores a single link or many.
+              </p>
+              <div className="field-group">
+                <label htmlFor="relationTarget">Target entity type</label>
+                <select
+                  id="relationTarget"
+                  name="relationTargetEntityTypeId"
+                  value={formState.relationTargetEntityTypeId ?? ''}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="" disabled>
+                    Select entity type…
+                  </option>
+                  {entityTypes?.map((entity) => (
+                    <option key={entity.id} value={entity.id}>
+                      {entity.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="row row-wrap">
+                <label className="row" style={{ gap: '0.5rem' }}>
+                  <input
+                    type="radio"
+                    name="relationCardinality"
+                    value="one"
+                    checked={formState.relationCardinality === 'one'}
+                    onChange={handleChange}
+                  />
+                  Single record
+                </label>
+                <label className="row" style={{ gap: '0.5rem' }}>
+                  <input
+                    type="radio"
+                    name="relationCardinality"
+                    value="many"
+                    checked={formState.relationCardinality === 'many'}
+                    onChange={handleChange}
+                  />
+                  Multiple records
+                </label>
+              </div>
+            </div>
+          )}
 
           <div className="surface-card surface-card--muted stack">
             <h4 style={{ margin: 0 }}>Access control</h4>

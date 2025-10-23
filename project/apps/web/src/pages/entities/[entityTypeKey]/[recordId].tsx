@@ -6,7 +6,7 @@ import type { components } from '@ddms/sdk';
 
 import { AppLayout } from '~/components/layout/AppLayout';
 import { DynamicForm } from '~/components/dynamic-form';
-import { useGetEntityTypeByKey } from '~/hooks/useEntityTypesApi';
+import { useGetEntityTypeByKey, useGetEntityTypes } from '~/hooks/useEntityTypesApi';
 import { useGetFieldDefs } from '~/hooks/useFieldDefsApi';
 import { useGetRecord, useUpdateRecord } from '~/hooks/useRecordsApi';
 
@@ -32,6 +32,15 @@ const EditRecordPage = () => {
     data: record,
     isLoading: isLoadingRecord,
   } = useGetRecord(key, id);
+
+  const { data: allEntityTypes } = useGetEntityTypes();
+  const entityTypesById = useMemo(() => {
+    const map = new Map<string, { key: string; label: string }>();
+    allEntityTypes?.forEach((item) => {
+      map.set(item.id, { key: item.key, label: item.label });
+    });
+    return map;
+  }, [allEntityTypes]);
 
   const updateRecord = useUpdateRecord(key, id);
 
@@ -166,6 +175,7 @@ const EditRecordPage = () => {
                 onCancel={() => router.push(`/entities/${key}`)}
                 submitText="Update record"
                 serverErrors={serverErrors}
+                entityTypesById={entityTypesById}
               />
             </div>
           </section>

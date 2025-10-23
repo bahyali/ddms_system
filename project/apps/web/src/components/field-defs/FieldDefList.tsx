@@ -6,6 +6,7 @@ interface FieldDefListProps {
   fieldDefs: FieldDef[];
   onEditField: (fieldDef: FieldDef) => void;
   onCreateField?: () => void;
+  onDeleteField?: (fieldDef: FieldDef) => void;
 }
 
 const renderAclBadges = (fieldDef: FieldDef) => {
@@ -39,6 +40,7 @@ export const FieldDefList = ({
   fieldDefs,
   onEditField,
   onCreateField,
+  onDeleteField,
 }: FieldDefListProps) => {
   if (fieldDefs.length === 0) {
     return (
@@ -118,6 +120,23 @@ export const FieldDefList = ({
                       <span className="chip">+{fieldDef.options.enum.length - 3}</span>
                     )}
                   </div>
+                ) : fieldDef.kind === 'relation' ? (
+                  <div className="stack-sm">
+                    <span className="helper-text">
+                      Target:{' '}
+                      {
+                        ((fieldDef.options as { relation?: { target_entity_type_id?: string } })?.relation
+                          ?.target_entity_type_id ?? '—')
+                      }
+                    </span>
+                    <span className="helper-text">
+                      Cardinality:{' '}
+                      {
+                        ((fieldDef.options as { relation?: { cardinality?: string } })?.relation
+                          ?.cardinality ?? 'one')
+                      }
+                    </span>
+                  </div>
                 ) : (
                   <span className="helper-text">—</span>
                 )}
@@ -131,6 +150,15 @@ export const FieldDefList = ({
                   >
                     Edit
                   </button>
+                  {onDeleteField && (
+                    <button
+                      type="button"
+                      className="button secondary"
+                      onClick={() => onDeleteField(fieldDef)}
+                    >
+                      Delete
+                    </button>
+                  )}
                   <button type="button" className="button secondary" disabled>
                     Dependencies
                   </button>

@@ -9,9 +9,11 @@ import {
   useCreateFieldDef,
   useGetFieldDefs,
   useUpdateFieldDef,
+  useDeleteFieldDef,
 } from '~/hooks/useFieldDefsApi';
 import { FieldDefList } from '~/components/field-defs/FieldDefList';
 import { FieldDefForm } from '~/components/field-defs/FieldDefForm';
+import { useGetEntityTypes } from '~/hooks/useEntityTypesApi';
 import { AppLayout } from '~/components/layout/AppLayout';
 import type { NextPageWithLayout } from '~/types/next';
 
@@ -44,6 +46,9 @@ const EntityTypeDetailPage: NextPageWithLayout = () => {
 
   const createFieldDef = useCreateFieldDef(entityTypeId);
   const updateFieldDef = useUpdateFieldDef(entityTypeId);
+  const deleteFieldDef = useDeleteFieldDef(entityTypeId);
+  const [fieldPendingDeletion, setFieldPendingDeletion] = useState<FieldDef | null>(null);
+  const { data: allEntityTypes } = useGetEntityTypes();
 
   const overviewCards = useMemo(() => {
     if (!entityType) {
@@ -65,14 +70,14 @@ const EntityTypeDetailPage: NextPageWithLayout = () => {
   };
 
   const handleOpenFormForEdit = (field: FieldDef) => {
-    setSelectedField(field);
-    setFormOpen(true);
-  };
+      setSelectedField(field);
+      setFormOpen(true);
+    };
 
-  const handleCloseForm = () => {
-    setFormOpen(false);
-    setSelectedField(null);
-  };
+    const handleCloseForm = () => {
+      setFormOpen(false);
+      setSelectedField(null);
+    };
 
   const handleSubmit = (data: FieldDefCreate | FieldDefUpdate) => {
     if (selectedField) {
@@ -93,6 +98,7 @@ const EntityTypeDetailPage: NextPageWithLayout = () => {
   };
 
   const mutationError = createFieldDef.error || updateFieldDef.error;
+  const deletionError = deleteFieldDef.error;
 
   return (
     <>
@@ -204,10 +210,14 @@ const EntityTypeDetailPage: NextPageWithLayout = () => {
                         fieldDefs={fieldDefs}
                         onEditField={handleOpenFormForEdit}
                         onCreateField={handleOpenFormForCreate}
+                        onDeleteField={(field) => setFieldPendingDeletion(field)}
                       />
                     )}
                     {mutationError && (
                       <p className="error">Error saving field: {mutationError.message}</p>
+                    )}
+                    {deletionError && (
+                      <p className="error">Error deleting field: {deletionError.message}</p>
                     )}
                   </div>
                 )}
@@ -245,7 +255,51 @@ const EntityTypeDetailPage: NextPageWithLayout = () => {
           onSubmit={handleSubmit}
           isLoading={createFieldDef.isPending || updateFieldDef.isPending}
           onCancel={handleCloseForm}
+          entityTypes={allEntityTypes?.map((et) => ({ id: et.id, label: et.label }))}
         />
+      )}
+
+      {fieldPendingDeletion && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="modal-panel stack">
+            <div className="modal-header">
+              <div className="stack-sm">
+                <h2 style={{ margin: 0 }}>Delete field</h2>
+                <p className="helper-text">
+                  Remove <strong>{fieldPendingDeletion.label}</strong>? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="stack">
+              <p>
+                Any forms referencing this field will stop rendering it. If you need the data, export records
+                before deleting.
+              </p>
+            </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="button secondary"
+                onClick={() => setFieldPendingDeletion(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button secondary"
+                onClick={() => {
+                  deleteFieldDef.mutate(fieldPendingDeletion, {
+                    onSuccess: () => setFieldPendingDeletion(null),
+                    onError: () => setFieldPendingDeletion(null),
+                  });
+                }}
+                disabled={deleteFieldDef.isPending}
+              >
+                {deleteFieldDef.isPending ? 'Deleting…' : 'Delete field'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

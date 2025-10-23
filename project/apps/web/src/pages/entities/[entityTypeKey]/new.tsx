@@ -1,12 +1,12 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { components } from '@ddms/sdk';
 
 import { AppLayout } from '~/components/layout/AppLayout';
 import { DynamicForm } from '~/components/dynamic-form';
-import { useGetEntityTypeByKey } from '~/hooks/useEntityTypesApi';
+import { useGetEntityTypeByKey, useGetEntityTypes } from '~/hooks/useEntityTypesApi';
 import { useGetFieldDefs } from '~/hooks/useFieldDefsApi';
 import { useCreateRecord } from '~/hooks/useRecordsApi';
 
@@ -27,6 +27,15 @@ const CreateRecordPage = () => {
     data: fieldDefs,
     isLoading: isLoadingFieldDefs,
   } = useGetFieldDefs(entityType?.id ?? '');
+
+  const { data: allEntityTypes } = useGetEntityTypes();
+  const entityTypesById = useMemo(() => {
+    const map = new Map<string, { key: string; label: string }>();
+    allEntityTypes?.forEach((item) => {
+      map.set(item.id, { key: item.key, label: item.label });
+    });
+    return map;
+  }, [allEntityTypes]);
 
   const createRecord = useCreateRecord(key);
 
@@ -108,16 +117,17 @@ const CreateRecordPage = () => {
 
             {isLoading && <p className="helper-text">Loading form…</p>}
 
-            {!isLoading && fieldDefs && entityType && (
-              <DynamicForm
-                fieldDefs={fieldDefs}
-                onSubmit={handleSubmit}
-                isLoading={createRecord.isPending}
-                onCancel={() => router.push(`/entities/${key}`)}
-                submitText="Create record"
-                serverErrors={serverErrors}
-              />
-            )}
+        {!isLoading && fieldDefs && entityType && (
+          <DynamicForm
+            fieldDefs={fieldDefs}
+            onSubmit={handleSubmit}
+            isLoading={createRecord.isPending}
+            onCancel={() => router.push(`/entities/${key}`)}
+            submitText="Create record"
+            serverErrors={serverErrors}
+            entityTypesById={entityTypesById}
+          />
+        )}
             {createRecord.isError && (
               <p className="error">
                 Error creating record: {createRecord.error?.message}
