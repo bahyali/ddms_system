@@ -62,17 +62,19 @@ LINT_EXIT_CODE=$?
 set -e
 
 # 6. Transform the ESLint JSON output to the required custom format using jq.
-# This produces a stream of single-line JSON objects, one for each linting error.
+# This produces a single JSON array. If there are no errors, it will be an empty array.
 jq -c '
-  .[] | .filePath as $path | .messages[] |
-  {
-    "type": .ruleId,
-    "path": $path,
-    "obj": (.nodeType // "N/A"),
-    "message": .message,
-    "line": .line,
-    "column": .column
-  }
+  [
+    .[] | .filePath as $path | .messages[] |
+    {
+      "type": .ruleId,
+      "path": $path,
+      "obj": (.nodeType // "N/A"),
+      "message": .message,
+      "line": .line,
+      "column": .column
+    }
+  ]
 ' "$LINT_OUTPUT_FILE"
 
 # 7. Clean up the temporary file.
