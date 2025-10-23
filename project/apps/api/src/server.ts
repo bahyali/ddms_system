@@ -13,6 +13,22 @@ import relationsRoutes from './routes/relations';
 import tenantContextPlugin from './plugins/tenant_context';
 import authPlugin from './plugins/auth';
 import eventsRoutes from './routes/events';
+import { tenants } from '@ddms/db';
+
+const isMockAuthEnabled =
+  process.env.MOCK_AUTH === 'true' ||
+  (process.env.MOCK_AUTH !== 'false' && process.env.NODE_ENV !== 'production');
+const mockTenantId =
+  process.env.MOCK_TENANT_ID ?? '11111111-1111-1111-1111-111111111111';
+const mockUserId = process.env.MOCK_USER_ID ?? 'dev-user';
+const mockTenantName = process.env.MOCK_TENANT_NAME ?? 'Mock Tenant';
+const rawMockRoles =
+  process.env.MOCK_ROLES ?? 'admin';
+const parsedMockRoles = rawMockRoles
+  .split(',')
+  .map((role) => role.trim())
+  .filter((role) => role.length > 0);
+const mockRoles = parsedMockRoles.length > 0 ? parsedMockRoles : ['admin'];
 
 export async function buildServer() {
   const server = fastify({
@@ -34,11 +50,41 @@ export async function buildServer() {
   await server.register(tenantContextPlugin);
   await server.register(authPlugin);
 
+  if (isMockAuthEnabled) {
+    try {
+      await server.db
+        .insert(tenants)
+        .values({
+          id: mockTenantId,
+          name: mockTenantName,
+        })
+        .onConflictDoNothing({ target: tenants.id });
+    } catch (err) {
+      server.log.error(err, 'Failed to ensure mock tenant exists');
+    }
+  }
+
   // Global authentication hook
-  server.addHook('preHandler', async (request, reply) => {
+  server.addHook('preValidation', async (request, reply) => {
     // List of public routes that do not require authentication
     const publicRoutes = ['/health'];
     if (publicRoutes.includes(request.url)) {
+      return;
+    }
+
+    if (isMockAuthEnabled) {
+      const headerTenantId = request.headers['x-tenant-id'];
+      const tenantId =
+        typeof headerTenantId === 'string' && headerTenantId.length > 0
+          ? headerTenantId
+          : mockTenantId;
+
+      request.user = {
+        id: mockUserId,
+        roles: mockRoles,
+        tenantId,
+      };
+      request.tenantId = tenantId;
       return;
     }
 
@@ -57,6 +103,7 @@ export async function buildServer() {
         roles: payload.roles,
         tenantId: payload.tenant_id,
       };
+      request.tenantId = payload.tenant_id;
     } catch (err) {
       reply
         .code(401)
@@ -68,7 +115,7 @@ export async function buildServer() {
   await server.register(metadataRoutes, { prefix: '/api/v1' });
   await server.register(entitiesRoutes, { prefix: '/api/v1/entities' });
   await server.register(relationsRoutes, { prefix: '/api/v1' });
-  await server.register(eventsRoutes, { prefix: '/api/v1' });
+  await server.register(eventsRoutes, { prefix: '/api/v1/events' });
 
   return server;
 }

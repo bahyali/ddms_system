@@ -23,7 +23,7 @@ export const fieldKindEnum = pgEnum('field_kind', [
   'boolean',
 ]);
 
-const tsvector = customType<{ data: string }>('tsvector');
+const tsvector = customType<{ data: string }>({ dataType: () => 'tsvector' });
 
 // Table Definitions
 

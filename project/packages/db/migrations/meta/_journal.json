@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1761175809800,
+      "tag": "0000_curvy_mysterio",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1761175810801,
+      "tag": "0001_triggers_and_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1761175811802,
+      "tag": "0002_record_triggers",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1761175812803,
+      "tag": "0003_notify_triggers",
+      "breakpoints": true
+    }
+  ]
+}

@@ -22,9 +22,13 @@ const tenantContextPlugin: FastifyPluginAsync = async (fastify) => {
       return;
     }
 
-    const tenantId = request.headers['x-tenant-id'];
+    const headerTenantId = request.headers['x-tenant-id'];
+    const candidateTenantId =
+      typeof headerTenantId === 'string' && headerTenantId.length > 0
+        ? headerTenantId
+        : request.tenantId;
 
-    if (!tenantId || typeof tenantId !== 'string') {
+    if (!candidateTenantId || typeof candidateTenantId !== 'string') {
       return reply.status(400).send({
         code: 'BAD_REQUEST',
         message: 'x-tenant-id header is required.',
@@ -32,9 +36,9 @@ const tenantContextPlugin: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
-      const validatedTenantId = tenantIdSchema.parse(tenantId);
+      const validatedTenantId = tenantIdSchema.parse(candidateTenantId);
 
-      // Attach the validated tenantId to the request object
+      // Attach the validated tenantId to the request object (overrides empty default)
       request.tenantId = validatedTenantId;
 
       // The third argument `true` makes the setting local to the current transaction.

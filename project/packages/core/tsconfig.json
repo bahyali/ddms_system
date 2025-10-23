@@ -5,10 +5,22 @@
     "rootDir": "src",
     "types": [
       "node"
-    ]
+    ],
+    "paths": {
+      "@ddms/db": [
+        "packages/db/dist/index.d.ts"
+      ],
+      "@ddms/db/*": [
+        "packages/db/dist/*"
+      ]
+    }
   },
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../db"
+    }
+  ]
 }

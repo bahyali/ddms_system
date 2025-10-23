@@ -1,9 +1,8 @@
 import { z, ZodTypeAny, AnyZodObject } from 'zod';
-import { fieldDefs } from '@ddms/db/schema';
-import { InferSelectModel } from 'drizzle-orm';
+import { fieldDefs } from '@ddms/db';
 
 // Drizzle's InferSelectModel gives us the type of a selected row.
-export type FieldDef = InferSelectModel<typeof fieldDefs>;
+export type FieldDef = typeof fieldDefs.$inferSelect;
 
 // Schemas for the `validate` JSONB column, nested by field kind as per manifest
 const textValidationSchema = z
@@ -98,7 +97,7 @@ function buildZodTypeFromFieldDef(field: FieldDef): ZodTypeAny {
     }
 
     case 'date': {
-      let type = z
+      const baseType = z
         .string()
         .datetime({ message: 'Invalid ISO 8601 date format' });
       const validationRules = z
@@ -106,15 +105,23 @@ function buildZodTypeFromFieldDef(field: FieldDef): ZodTypeAny {
         .optional()
         .parse(field.validate ?? {});
       const validate = validationRules?.date;
+      let type: ZodTypeAny = baseType;
 
-      if (validate?.min) {
-        type = type.refine((val) => new Date(val) >= new Date(validate!.min!), {
-          message: `Date must be on or after ${validate.min}`,
-        });
-      }
-      if (validate?.max) {
-        type = type.refine((val) => new Date(val) <= new Date(validate!.max!), {
-          message: `Date must be on or before ${validate.max}`,
+      if (validate?.min || validate?.max) {
+        const { min, max } = validate;
+        type = baseType.superRefine((val, ctx) => {
+          if (min && new Date(val) < new Date(min)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Date must be on or after ${min}`,
+            });
+          }
+          if (max && new Date(val) > new Date(max)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Date must be on or before ${max}`,
+            });
+          }
         });
       }
       zodType = type;
@@ -160,8 +167,7 @@ function buildZodTypeFromFieldDef(field: FieldDef): ZodTypeAny {
     }
 
     default: {
-      const exhaustiveCheck: never = field.kind;
-      throw new Error(`Unsupported field kind: ${exhaustiveCheck}`);
+      throw new Error(`Unsupported field kind: ${field.kind}`);
     }
   }
 

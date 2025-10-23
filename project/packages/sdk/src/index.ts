@@ -6,28 +6,94 @@
 
 export interface paths {
   "/entity-types": {
+    /**
+     * List Entity Types
+     * @description Retrieves a list of all entity types for the tenant.
+     */
     get: operations["listEntityTypes"];
+    /**
+     * Create Entity Type
+     * @description Creates a new entity type.
+     */
     post: operations["createEntityType"];
   };
   "/entity-types/{entityTypeId}": {
+    /**
+     * Update Entity Type
+     * @description Updates an existing entity type.
+     */
     patch: operations["updateEntityType"];
   };
   "/entity-types/{entityTypeId}/fields": {
+    /**
+     * List Field Definitions
+     * @description Retrieves a list of all field definitions for a given entity type.
+     */
     get: operations["listFieldDefs"];
+    /**
+     * Create Field Definition
+     * @description Creates a new field definition for an entity type.
+     */
     post: operations["createFieldDef"];
   };
   "/entities/{entityTypeKey}": {
+    /**
+     * Create Record
+     * @description Creates a new record for a given entity type.
+     */
     post: operations["createRecord"];
   };
   "/entities/{entityTypeKey}/search": {
+    /**
+     * Search Records
+     * @description Searches for records of a given entity type using a filter.
+     */
     post: operations["searchRecords"];
   };
   "/entities/{entityTypeKey}/{recordId}": {
+    /**
+     * Get Record by ID
+     * @description Retrieves a single record by its ID.
+     */
     get: operations["getRecord"];
+    /**
+     * Update Record
+     * @description Updates an existing record. Uses optimistic locking via a version number.
+     */
     patch: operations["updateRecord"];
   };
   "/fields/{fieldId}": {
+    /**
+     * Update Field Definition
+     * @description Updates an existing field definition.
+     */
     patch: operations["updateFieldDef"];
+  };
+  "/relations": {
+    /**
+     * List Relations
+     * @description Retrieves a list of relations, typically filtered by the source record and field.
+     */
+    get: operations["listRelations"];
+    /**
+     * Create Relation
+     * @description Creates a new relationship (edge) between two records.
+     */
+    post: operations["createRelation"];
+  };
+  "/relations/{relationId}": {
+    /**
+     * Delete Relation
+     * @description Deletes an existing relationship (edge).
+     */
+    delete: operations["deleteRelation"];
+  };
+  "/events": {
+    /**
+     * Subscribe to real-time events
+     * @description Establishes a Server-Sent Events (SSE) connection to receive real-time updates for the current tenant.
+     */
+    get: operations["subscribeToEvents"];
   };
 }
 
@@ -35,48 +101,38 @@ export type webhooks = Record<string, never>;
 
 export interface components {
   schemas: {
-    /** @description A unique machine-readable key for the entity type (e.g., 'user', 'project'). */
     EntityType: {
-      /**
-       * Format: uuid
-       * @readonly
-       */
+      /** Format: uuid */
       id: string;
-      /** @description A unique machine-readable key for the entity type (e.g., 'user', 'project'). */
+      /** @description A unique machine-readable key for the entity type (e.g., "user", "project"). */
       key: string;
-      /** @description A human-readable label for the entity type (e.g., 'User', 'Project'). */
+      /** @description A human-readable label for the entity type (e.g., "User", "Project"). */
       label: string;
       /** @description A description of the entity type. */
       description?: string | null;
     };
     EntityTypeCreate: {
-      /** @description A unique machine-readable key for the entity type (e.g., 'user', 'project'). */
+      /** @description A unique machine-readable key for the entity type (e.g., "user", "project"). */
       key: string;
-      /** @description A human-readable label for the entity type (e.g., 'User', 'Project'). */
+      /** @description A human-readable label for the entity type (e.g., "User", "Project"). */
       label: string;
       /** @description A description of the entity type. */
       description?: string | null;
     };
     EntityTypeUpdate: {
-      /** @description A human-readable label for the entity type (e.g., 'User', 'Project'). */
+      /** @description A human-readable label for the entity type (e.g., "User", "Project"). */
       label?: string;
       /** @description A description of the entity type. */
       description?: string | null;
     };
     FieldDef: {
-      /**
-       * Format: uuid
-       * @readonly
-       */
+      /** Format: uuid */
       id: string;
-      /**
-       * Format: uuid
-       * @readonly
-       */
+      /** Format: uuid */
       entityTypeId: string;
-      /** @description A unique machine-readable key for the field (e.g., 'status', 'budget'). */
+      /** @description A unique machine-readable key for the field (e.g., "status", "budget"). */
       key: string;
-      /** @description A human-readable label for the field (e.g., 'Status', 'Budget'). */
+      /** @description A human-readable label for the field (e.g., "Status", "Budget"). */
       label: string;
       /** @enum {string} */
       kind: "text" | "number" | "date" | "select" | "relation" | "boolean";
@@ -123,11 +179,11 @@ export interface components {
       active?: boolean;
     };
     FieldDefOptions: {
-      /** @description For kind='select'. A list of possible values. */
+      /** @description For kind="select". A list of possible values. */
       enum?: string[];
-      /** @description For kind='select'. Whether multiple values can be selected. */
+      /** @description For kind="select". Whether multiple values can be selected. */
       multiselect?: boolean;
-      /** @description For kind='relation'. Defines the relationship target. */
+      /** @description For kind="relation". Defines the relationship target. */
       relation?: {
         /** Format: uuid */
         targetEntityTypeId: string;
@@ -140,9 +196,9 @@ export interface components {
        */
       formula?: string;
       /** @description Conditional visibility rules for the UI. */
-      visibleIf?: Record<string, unknown>[];
+      visibleIf?: Record<string, never>[];
       /** @description Conditional requirement rules. */
-      requiredIf?: Record<string, unknown>[];
+      requiredIf?: Record<string, never>[];
     };
     /** @description Validation rules that depend on the field kind. */
     FieldDefValidate: {
@@ -169,20 +225,11 @@ export interface components {
       write?: string[];
     };
     Record: {
-      /**
-       * Format: uuid
-       * @readonly
-       */
+      /** Format: uuid */
       id: string;
-      /**
-       * Format: uuid
-       * @readonly
-       */
+      /** Format: uuid */
       entityTypeId: string;
-      /**
-       * @description The version number of the record, used for optimistic locking.
-       * @readonly
-       */
+      /** @description The version number of the record, used for optimistic locking. */
       version: number;
       /**
        * @description A JSON object containing the custom field data for the record.
@@ -192,37 +239,71 @@ export interface components {
        *   "budget": 12000
        * }
        */
-      data: Record<string, unknown>;
-      /**
-       * Format: uuid
-       * @readonly
-       */
+      data: {
+        [key: string]: unknown;
+      };
+      /** Format: uuid */
       createdBy?: string | null;
-      /**
-       * Format: uuid
-       * @readonly
-       */
+      /** Format: uuid */
       updatedBy?: string | null;
-      /**
-       * Format: date-time
-       * @readonly
-       */
+      /** Format: date-time */
       createdAt: string;
-      /**
-       * Format: date-time
-       * @readonly
-       */
+      /** Format: date-time */
       updatedAt: string;
     };
     RecordCreate: {
       /** @description A JSON object containing the custom field data for the new record. */
-      data: Record<string, unknown>;
+      data: {
+        [key: string]: unknown;
+      };
     };
     RecordUpdate: {
       /** @description A JSON object containing the fields to update. */
-      data: Record<string, unknown>;
+      data: {
+        [key: string]: unknown;
+      };
       /** @description The current version of the record being updated, for optimistic locking. */
       version: number;
+    };
+    Relation: {
+      /** Format: uuid */
+      id: string;
+      /**
+       * Format: uuid
+       * @description The ID of the relation field definition.
+       */
+      field_id: string;
+      /**
+       * Format: uuid
+       * @description The ID of the source record in the relation.
+       */
+      from_record_id: string;
+      /**
+       * Format: uuid
+       * @description The ID of the target record in the relation.
+       */
+      to_record_id: string;
+      /** Format: uuid */
+      createdBy?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    RelationCreate: {
+      /**
+       * Format: uuid
+       * @description The ID of the relation field definition.
+       */
+      field_id: string;
+      /**
+       * Format: uuid
+       * @description The ID of the source record in the relation.
+       */
+      from_record_id: string;
+      /**
+       * Format: uuid
+       * @description The ID of the target record in the relation.
+       */
+      to_record_id: string;
     };
     SearchRequest: {
       filter?: components["schemas"]["Filter"];
@@ -231,8 +312,6 @@ export interface components {
       /**
        * @description The maximum number of records to return.
        * @default 50
-       * @minimum 1
-       * @maximum 1000
        */
       limit?: number;
       /** @description A cursor for pagination, obtained from a previous search response. */
@@ -246,7 +325,7 @@ export interface components {
       total: number;
     };
     Sort: {
-      /** @description The key of the field to sort by (e.g., 'budget', 'createdAt'). */
+      /** @description The key of the field to sort by (e.g., "budget", "createdAt"). */
       field: string;
       /**
        * @default asc
@@ -257,6 +336,7 @@ export interface components {
     /**
      * @description A flexible filter object to query records. It can be a logical operator (`and`, `or`, `not`) or a field-level comparison.
      * See the manifest for the full grammar.
+     *
      * @example {
      *   "op": "and",
      *   "filters": [
@@ -291,7 +371,6 @@ export interface components {
       /** @description The search query for `fulltext` search. */
       query?: string;
     };
-    /** @description Error Schema */
     Error: {
       /**
        * @description A machine-readable error code.
@@ -351,17 +430,21 @@ export interface components {
   parameters: {
     /** @description The ID of the entity type. */
     entityTypeId: string;
-    /** @description The unique machine-readable key for the entity type (e.g., 'user', 'project'). */
+    /** @description The unique machine-readable key for the entity type (e.g., "user", "project"). */
     entityTypeKey: string;
     /** @description The ID of the record. */
     recordId: string;
     /** @description The ID of the field definition. */
     fieldId: string;
+    /** @description The ID of the relation (edge). */
+    relationId: string;
   };
   requestBodies: never;
   headers: never;
   pathItems: never;
 }
+
+export type $defs = Record<string, never>;
 
 export type external = Record<string, never>;
 
@@ -598,6 +681,82 @@ export interface operations {
       };
       400: components["responses"]["BadRequest"];
       404: components["responses"]["NotFound"];
+    };
+  };
+  /**
+   * List Relations
+   * @description Retrieves a list of relations, typically filtered by the source record and field.
+   */
+  listRelations: {
+    parameters: {
+      query: {
+        /** @description The ID of the source record to filter relations by. */
+        from_record_id: string;
+        /** @description The ID of the relation field to filter relations by. */
+        field_id: string;
+      };
+    };
+    responses: {
+      /** @description A list of relations. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Relation"][];
+        };
+      };
+      400: components["responses"]["BadRequest"];
+    };
+  };
+  /**
+   * Create Relation
+   * @description Creates a new relationship (edge) between two records.
+   */
+  createRelation: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RelationCreate"];
+      };
+    };
+    responses: {
+      /** @description Relation created successfully. */
+      201: {
+        content: {
+          "application/json": components["schemas"]["Relation"];
+        };
+      };
+      400: components["responses"]["BadRequest"];
+      404: components["responses"]["NotFound"];
+    };
+  };
+  /**
+   * Delete Relation
+   * @description Deletes an existing relationship (edge).
+   */
+  deleteRelation: {
+    parameters: {
+      path: {
+        relationId: components["parameters"]["relationId"];
+      };
+    };
+    responses: {
+      /** @description Relation deleted successfully. */
+      204: {
+        content: never;
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  /**
+   * Subscribe to real-time events
+   * @description Establishes a Server-Sent Events (SSE) connection to receive real-time updates for the current tenant.
+   */
+  subscribeToEvents: {
+    responses: {
+      /** @description SSE connection established. */
+      200: {
+        content: {
+          "text/event-stream": unknown;
+        };
+      };
     };
   };
 }

@@ -65,7 +65,7 @@ const SseHandler = () => {
   );
 
   // The SSE endpoint is proxied by Next.js to the API server
-  useSse('/api/v1/events', handleSseEvent);
+  useSse('/events', handleSseEvent);
 
   return null; // This component does not render anything
 };

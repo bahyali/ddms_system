@@ -5,9 +5,9 @@ node_modules
 /.pnpm-store
 
 # build artifacts
-/dist
-/build
-/.next
+dist
+build
+.next
 
 # misc
 .DS_Store

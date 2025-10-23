@@ -80,7 +80,7 @@ const eventsPlugin: FastifyPluginAsync = async (fastify) => {
   }, 20000);
 
   fastify.get(
-    '/events',
+    '/',
     {
       schema: {
         tags: ['Real-time'],
