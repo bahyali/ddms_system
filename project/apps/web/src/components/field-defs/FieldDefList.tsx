@@ -10,22 +10,25 @@ interface FieldDefListProps {
 
 const renderAclBadges = (fieldDef: FieldDef) => {
   const acl = fieldDef.acl as { read?: string[]; write?: string[] } | undefined;
-  if (!acl || (!acl.read && !acl.write)) {
-    return <span className="helper-text">Default (admin)</span>;
+  const readRoles = acl?.read ?? [];
+  const writeRoles = acl?.write ?? [];
+
+  if (readRoles.length === 0 && writeRoles.length === 0) {
+    return <span className="helper-text">No roles assigned</span>;
   }
 
   return (
     <div className="stack-sm">
-      {acl.read && (
+      {readRoles.length > 0 && (
         <span className="helper-text">
           Read:&nbsp;
-          {acl.read.length > 0 ? acl.read.join(', ') : '—'}
+          {readRoles.join(', ')}
         </span>
       )}
-      {acl.write && (
+      {writeRoles.length > 0 && (
         <span className="helper-text">
           Write:&nbsp;
-          {acl.write.length > 0 ? acl.write.join(', ') : '—'}
+          {writeRoles.join(', ')}
         </span>
       )}
     </div>

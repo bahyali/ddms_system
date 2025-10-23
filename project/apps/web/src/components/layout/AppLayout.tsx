@@ -36,6 +36,7 @@ export const AppLayout = ({
       return Array.from({ length: 3 }, (_, index) => ({
         label: `entity-skeleton-${index}`,
         skeleton: true,
+        key: `data-skeleton-${index}`,
       }));
     }
 
@@ -52,6 +53,7 @@ export const AppLayout = ({
     return entityTypes.map((entityType) => ({
       label: entityType.label,
       href: `/entities/${entityType.key}`,
+      key: `data-${entityType.id}`,
     }));
   }, [entityTypes, isLoadingEntityTypes]);
 

@@ -8,6 +8,7 @@ export interface NavItem {
   disabled?: boolean;
   badge?: string;
   skeleton?: boolean;
+  key?: string;
 }
 
 export interface NavSection {
@@ -30,14 +31,15 @@ export const GlobalNav = ({ sections, footer }: GlobalNavProps) => {
         <div className="nav-section" key={section.label}>
           <span className="nav-section-label">{section.label}</span>
           <ul className="nav-items">
-            {section.items.map((item) => {
+            {section.items.map((item, i) => {
               if (item.skeleton) {
-                return <li key={`${section.label}-skeleton`} className="nav-skeleton" />;
+                const skeletonKey = item.key ?? `${section.label}-skeleton-${i}`;
+                return <li key={skeletonKey} className="nav-skeleton" />;
               }
 
               if (item.disabled) {
                 return (
-                  <li key={item.label}>
+                  <li key={item.key ?? `${section.label}-${item.label}-${i}`}>
                     <span className="nav-link is-disabled">
                       {item.label}
                       {item.badge && (
@@ -55,7 +57,7 @@ export const GlobalNav = ({ sections, footer }: GlobalNavProps) => {
                 (router.asPath === item.href || router.asPath.startsWith(`${item.href}/`));
 
               return (
-                <li key={item.label}>
+                <li key={item.key ?? `${section.label}-${item.label}-${i}`}>
                   {item.href ? (
                     <Link
                       href={item.href}

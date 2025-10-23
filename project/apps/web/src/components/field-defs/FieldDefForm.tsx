@@ -18,6 +18,8 @@ interface FormState {
   integer?: boolean;
   enum?: string;
   multiselect?: boolean;
+  readRoles: string[];
+  writeRoles: string[];
 }
 
 const KINDS: FieldDefCreate['kind'][] = [
@@ -42,7 +44,11 @@ const INITIAL_FORM_STATE: FormState = {
   integer: false,
   enum: '',
   multiselect: false,
+  readRoles: ['admin', 'builder', 'contributor', 'viewer'],
+  writeRoles: ['admin', 'builder'],
 };
+
+const AVAILABLE_ROLES = ['admin', 'builder', 'contributor', 'viewer'] as const;
 
 interface FieldDefFormProps {
   initialData?: FieldDef | null;
@@ -75,6 +81,16 @@ export const FieldDefForm = ({
         integer: initialData.validate?.number?.integer,
         enum: initialData.options?.enum?.join('\n') ?? '',
         multiselect: initialData.options?.multiselect,
+        readRoles:
+          Array.isArray((initialData.acl as { read?: string[] } | undefined)?.read) &&
+          (initialData.acl as { read?: string[] } | undefined)?.read?.length
+            ? ((initialData.acl as { read?: string[] } | undefined)?.read as string[])
+            : ['admin', 'builder', 'contributor', 'viewer'],
+        writeRoles:
+          Array.isArray((initialData.acl as { write?: string[] } | undefined)?.write) &&
+          (initialData.acl as { write?: string[] } | undefined)?.write?.length
+            ? ((initialData.acl as { write?: string[] } | undefined)?.write as string[])
+            : ['admin', 'builder'],
       });
     } else {
       setFormState(INITIAL_FORM_STATE);
@@ -138,6 +154,11 @@ export const FieldDefForm = ({
         multiselect: formState.multiselect,
       };
     }
+
+    payload.acl = {
+      read: formState.readRoles,
+      write: formState.writeRoles,
+    };
 
     onSubmit(payload as FieldDefCreate | FieldDefUpdate);
   };
@@ -323,6 +344,70 @@ export const FieldDefForm = ({
           </label>
 
           {renderKindSpecificFields()}
+
+          <div className="surface-card surface-card--muted stack">
+            <h4 style={{ margin: 0 }}>Access control</h4>
+            <p className="helper-text">
+              Choose which roles can read and write this field. Contributors inherit read access unless restricted.
+            </p>
+            <div className="stack-sm">
+              <span className="helper-text">Readable by</span>
+              <div className="chip-group" role="group" aria-label="Readable roles">
+                {AVAILABLE_ROLES.map((role) => (
+                  <label key={`read-${role}`} className="chip" style={{ cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={formState.readRoles.includes(role)}
+                      onChange={(event) => {
+                        setFormState((previous) => {
+                          const next = new Set(previous.readRoles);
+                          if (event.target.checked) {
+                            next.add(role);
+                          } else {
+                            next.delete(role);
+                          }
+                          return {
+                            ...previous,
+                            readRoles: Array.from(next),
+                          };
+                        });
+                      }}
+                    />
+                    {role}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="stack-sm">
+              <span className="helper-text">Writable by</span>
+              <div className="chip-group" role="group" aria-label="Writable roles">
+                {AVAILABLE_ROLES.map((role) => (
+                  <label key={`write-${role}`} className="chip" style={{ cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={formState.writeRoles.includes(role)}
+                      onChange={(event) => {
+                        setFormState((previous) => {
+                          const next = new Set(previous.writeRoles);
+                          if (event.target.checked) {
+                            next.add(role);
+                          } else {
+                            next.delete(role);
+                          }
+                          return {
+                            ...previous,
+                            writeRoles: Array.from(next),
+                          };
+                        });
+                      }}
+                    />
+                    {role}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="modal-actions">

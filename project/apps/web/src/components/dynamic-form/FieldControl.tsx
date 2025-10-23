@@ -1,3 +1,4 @@
+import type { ChangeEvent } from 'react';
 import type { components } from '@ddms/sdk';
 
 type FieldDef = components['schemas']['FieldDef'];
@@ -84,7 +85,7 @@ export function FieldControl({
           : typeof value === 'string'
           ? value
           : '',
-        onChange: (event: React.ChangeEvent<HTMLSelectElement>) => {
+        onChange: (event: ChangeEvent<HTMLSelectElement>) => {
           if (isMultiselect) {
             const selectedValues = Array.from(
               event.target.selectedOptions,
