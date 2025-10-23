@@ -9,6 +9,7 @@ import {
   relationIdParamsSchema,
   relationSchema,
 } from './schemas';
+import { recordAuditEvent } from '../../lib/audit';
 
 const relationsRoutes: FastifyPluginAsync = async (fastify) => {
   // Create Relation
@@ -76,6 +77,19 @@ const relationsRoutes: FastifyPluginAsync = async (fastify) => {
           createdAt: newEdge.createdAt.toISOString(),
         };
 
+        await recordAuditEvent(request.db, fastify.log, {
+          tenantId,
+          actorId: user.id,
+          action: 'relation.created',
+          resourceType: 'relation',
+          resourceId: newEdge.id,
+          meta: {
+            fieldId: newEdge.fieldId,
+            fromRecordId: newEdge.fromRecordId,
+            toRecordId: newEdge.toRecordId,
+          },
+        });
+
         return reply.code(201).send(responsePayload);
       } catch (err) {
         if (err instanceof PgError) {
@@ -100,6 +114,7 @@ const relationsRoutes: FastifyPluginAsync = async (fastify) => {
         request.log.error(err, 'Failed to create relation');
         throw err; // Let the generic error handler take over
       }
+
     },
   );
 
@@ -137,6 +152,19 @@ const relationsRoutes: FastifyPluginAsync = async (fastify) => {
           .code(404)
           .send({ code: 'NOT_FOUND', message: 'Relation not found.' });
       }
+
+      await recordAuditEvent(request.db, fastify.log, {
+        tenantId: request.tenantId,
+        actorId: request.user.id,
+        action: 'relation.deleted',
+        resourceType: 'relation',
+        resourceId: relationId,
+        meta: {
+          fieldId: deletedEdge.fieldId,
+          fromRecordId: deletedEdge.fromRecordId,
+          toRecordId: deletedEdge.toRecordId,
+        },
+      });
 
       return reply.code(204).send();
     },

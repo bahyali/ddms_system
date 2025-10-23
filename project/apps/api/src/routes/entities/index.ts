@@ -10,6 +10,7 @@ import {
 import * as recordDal from '../../lib/dal/records';
 import * as metadataDal from '../../lib/dal/metadata';
 import * as schema from '@ddms/db';
+import { recordAuditEvent } from '../../lib/audit';
 import {
   entityTypeKeyParamsSchema,
   recordCreateBodySchema,
@@ -97,12 +98,26 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
         });
       }
 
+      const recordData = validationResult.data;
       const newRecord = await recordDal.createRecord(
         request.db,
         request.tenantId,
         entityType.id,
-        { data: validationResult.data, createdBy: user.id },
+        { data: recordData, createdBy: user.id },
       );
+
+      await recordAuditEvent(request.db, fastify.log, {
+        tenantId: request.tenantId,
+        actorId: user.id,
+        action: 'record.created',
+        resourceType: 'record',
+        resourceId: newRecord.id,
+        meta: {
+          entityTypeId: entityType.id,
+          entityTypeKey: entityType.key,
+          dataKeys: Object.keys(recordData),
+        },
+      });
 
       const filteredRecord = filterReadableFields(user, fieldDefs, newRecord);
       return reply.code(201).send(filteredRecord);
@@ -308,12 +323,13 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
         });
       }
 
+      const partialData = validationResult.data;
       const updatedRecord = await recordDal.updateRecord(
         request.db,
         request.tenantId,
         recordId,
         version,
-        { data: validationResult.data, updatedBy: user.id },
+        { data: partialData, updatedBy: user.id },
       );
 
       if (!updatedRecord) {
@@ -330,6 +346,20 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
         fieldDefs,
         updatedRecord,
       );
+
+      await recordAuditEvent(request.db, fastify.log, {
+        tenantId: request.tenantId,
+        actorId: user.id,
+        action: 'record.updated',
+        resourceType: 'record',
+        resourceId: recordId,
+        meta: {
+          entityTypeId: entityType.id,
+          entityTypeKey: entityType.key,
+          changedKeys: Object.keys(partialData),
+        },
+      });
+
       return reply.send(filteredRecord);
     },
   );

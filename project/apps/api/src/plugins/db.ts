@@ -7,6 +7,7 @@ import * as schema from '@ddms/db';
 declare module 'fastify' {
   interface FastifyInstance {
     db: ReturnType<typeof drizzle<typeof schema>>;
+    pg: Pool;
   }
   interface FastifyRequest {
     db: ReturnType<typeof drizzle<typeof schema>>;
@@ -30,6 +31,7 @@ export default fp(async function dbPlugin(fastify) {
   const db = drizzle(pool, { schema });
 
   fastify.decorate('db', db);
+  fastify.decorate('pg', pool);
   fastify.decorateRequest('db', db);
 
   fastify.addHook('onClose', async (instance) => {

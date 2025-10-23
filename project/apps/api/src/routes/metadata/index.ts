@@ -11,6 +11,7 @@ import {
   createFieldDefBodySchema,
   updateFieldDefBodySchema,
 } from './schemas';
+import { recordAuditEvent } from '../../lib/audit';
 
 const metadataRoutes: FastifyPluginAsync = async (fastify) => {
   //
@@ -63,6 +64,16 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
         request.tenantId,
         request.body,
       );
+
+      await recordAuditEvent(request.db, fastify.log, {
+        tenantId: request.tenantId,
+        actorId: request.user.id,
+        action: 'entity_type.created',
+        resourceType: 'entity_type',
+        resourceId: newEntityType.id,
+        meta: { key: newEntityType.key },
+      });
+
       return reply.code(201).send(newEntityType);
     },
   );
@@ -108,6 +119,16 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
         entityTypeId,
         request.body,
       );
+
+      await recordAuditEvent(request.db, fastify.log, {
+        tenantId: request.tenantId,
+        actorId: request.user.id,
+        action: 'entity_type.updated',
+        resourceType: 'entity_type',
+        resourceId: entityTypeId,
+        meta: { changes: request.body },
+      });
+
       return reply.send(updatedEntityType);
     },
   );
@@ -192,6 +213,28 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
         entityTypeId,
         request.body,
       );
+
+      if (newFieldDef.indexed) {
+        await fastify.fieldIndexer.enqueueJob({
+          tenantId: request.tenantId,
+          entityTypeId,
+          fieldId: newFieldDef.id,
+        });
+      }
+
+      await recordAuditEvent(request.db, fastify.log, {
+        tenantId: request.tenantId,
+        actorId: request.user.id,
+        action: 'field_def.created',
+        resourceType: 'field_def',
+        resourceId: newFieldDef.id,
+        meta: {
+          entityTypeId,
+          key: newFieldDef.key,
+          indexed: newFieldDef.indexed,
+        },
+      });
+
       return reply.code(201).send(newFieldDef);
     },
   );
@@ -237,6 +280,29 @@ const metadataRoutes: FastifyPluginAsync = async (fastify) => {
         fieldId,
         request.body,
       );
+
+      const indexedRequested = request.body.indexed;
+      if (
+        indexedRequested === true &&
+        existing.indexed === false &&
+        updatedFieldDef?.indexed
+      ) {
+        await fastify.fieldIndexer.enqueueJob({
+          tenantId: request.tenantId,
+          entityTypeId: existing.entityTypeId,
+          fieldId,
+        });
+      }
+
+      await recordAuditEvent(request.db, fastify.log, {
+        tenantId: request.tenantId,
+        actorId: request.user.id,
+        action: 'field_def.updated',
+        resourceType: 'field_def',
+        resourceId: fieldId,
+        meta: { changes: request.body },
+      });
+
       return reply.send(updatedFieldDef);
     },
   );

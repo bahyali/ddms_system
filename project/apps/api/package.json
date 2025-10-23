@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "lint": "eslint src --ext .ts",
-    "test": "echo \"@ddms/api: no test specified\" && exit 0"
+    "test": "tsx --test src/**/*.test.ts"
   },
   "dependencies": {
     "@ddms/core": "workspace:*",

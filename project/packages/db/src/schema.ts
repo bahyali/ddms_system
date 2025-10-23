@@ -23,6 +23,13 @@ export const fieldKindEnum = pgEnum('field_kind', [
   'boolean',
 ]);
 
+export const indexStatusEnum = pgEnum('index_status', [
+  'pending',
+  'in_progress',
+  'ready',
+  'failed',
+]);
+
 const tsvector = customType<{ data: string }>({ dataType: () => 'tsvector' });
 
 // Table Definitions
@@ -191,6 +198,43 @@ export const auditLog = pgTable('audit_log', {
   at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * Tracks background index creation jobs for field definitions.
+ */
+export const fieldIndexes = pgTable(
+  'field_indexes',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    entityTypeId: uuid('entity_type_id')
+      .notNull()
+      .references(() => entityTypes.id, { onDelete: 'cascade' }),
+    fieldId: uuid('field_id')
+      .notNull()
+      .references(() => fieldDefs.id, { onDelete: 'cascade' }),
+    indexName: text('index_name').notNull(),
+    status: indexStatusEnum('status').notNull().default('pending'),
+    attempts: integer('attempts').notNull().default(0),
+    lastError: text('last_error'),
+    startedAt: timestamp('started_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    uniqueField: unique('field_indexes_field_id_unique').on(table.fieldId),
+    uniqueIndexName: unique('field_indexes_index_name_unique').on(
+      table.indexName,
+    ),
+  }),
+);
+
 // Relations
 
 export const tenantsRelations = relations(tenants, ({ many }) => ({
@@ -198,6 +242,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   fieldDefs: many(fieldDefs),
   records: many(records),
   edges: many(edges),
+  fieldIndexes: many(fieldIndexes),
   auditLogs: many(auditLog),
 }));
 
@@ -208,6 +253,7 @@ export const entityTypesRelations = relations(entityTypes, ({ one, many }) => ({
   }),
   fieldDefs: many(fieldDefs),
   records: many(records),
+  fieldIndexes: many(fieldIndexes),
 }));
 
 export const fieldDefsRelations = relations(fieldDefs, ({ one, many }) => ({
@@ -220,6 +266,10 @@ export const fieldDefsRelations = relations(fieldDefs, ({ one, many }) => ({
     references: [entityTypes.id],
   }),
   edges: many(edges),
+  indexJob: one(fieldIndexes, {
+    fields: [fieldDefs.id],
+    references: [fieldIndexes.fieldId],
+  }),
 }));
 
 export const recordsRelations = relations(records, ({ one, many }) => ({
@@ -268,5 +318,20 @@ export const auditLogRelations = relations(auditLog, ({ one }) => ({
   tenant: one(tenants, {
     fields: [auditLog.tenantId],
     references: [tenants.id],
+  }),
+}));
+
+export const fieldIndexesRelations = relations(fieldIndexes, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [fieldIndexes.tenantId],
+    references: [tenants.id],
+  }),
+  entityType: one(entityTypes, {
+    fields: [fieldIndexes.entityTypeId],
+    references: [entityTypes.id],
+  }),
+  field: one(fieldDefs, {
+    fields: [fieldIndexes.fieldId],
+    references: [fieldDefs.id],
   }),
 }));

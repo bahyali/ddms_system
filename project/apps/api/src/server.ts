@@ -13,6 +13,8 @@ import relationsRoutes from './routes/relations';
 import tenantContextPlugin from './plugins/tenant_context';
 import authPlugin from './plugins/auth';
 import eventsRoutes from './routes/events';
+import indexerPlugin from './plugins/indexer';
+import indexesRoutes from './routes/indexes';
 import { tenants } from '@ddms/db';
 
 const isMockAuthEnabled =
@@ -49,6 +51,7 @@ export async function buildServer() {
   await server.register(dbPlugin);
   await server.register(tenantContextPlugin);
   await server.register(authPlugin);
+  await server.register(indexerPlugin);
 
   if (isMockAuthEnabled) {
     try {
@@ -116,6 +119,7 @@ export async function buildServer() {
   await server.register(entitiesRoutes, { prefix: '/api/v1/entities' });
   await server.register(relationsRoutes, { prefix: '/api/v1' });
   await server.register(eventsRoutes, { prefix: '/api/v1/events' });
+  await server.register(indexesRoutes, { prefix: '/api/v1' });
 
   return server;
 }

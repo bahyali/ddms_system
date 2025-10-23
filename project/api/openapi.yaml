@@ -16,6 +16,8 @@ tags:
     description: 'Operations for managing relationships (edges) between Records.'
   - name: Real-time
     description: 'Operations for real-time event streaming.'
+  - name: Operations
+    description: 'Operational endpoints for background jobs and maintenance.'
 
 paths:
   /entity-types:
@@ -329,6 +331,23 @@ paths:
           description: 'Relation deleted successfully.'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /indexes:
+    get:
+      tags:
+        - Operations
+      summary: 'List Field Index Jobs'
+      description: 'Retrieves the status of field indexing jobs for the current tenant.'
+      operationId: 'listFieldIndexes'
+      responses:
+        '200':
+          description: 'A list of field index jobs.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FieldIndexJob'
 
   /events:
     get:
@@ -777,6 +796,59 @@ components:
         - field_id
         - from_record_id
         - to_record_id
+
+    # Operations Schemas
+    FieldIndexJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fieldId:
+          type: string
+          format: uuid
+        entityTypeId:
+          type: string
+          format: uuid
+        indexName:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, ready, failed]
+        attempts:
+          type: integer
+        lastError:
+          type: string
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        fieldKey:
+          type: string
+        fieldLabel:
+          type: string
+      required:
+        - id
+        - fieldId
+        - entityTypeId
+        - indexName
+        - status
+        - attempts
+        - createdAt
+        - updatedAt
+        - fieldKey
+        - fieldLabel
 
     # Search Schemas
     SearchRequest:

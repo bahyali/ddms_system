@@ -29,6 +29,13 @@
       "when": 1761175812803,
       "tag": "0003_notify_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1761175813804,
+      "tag": "0004_field_index_jobs",
+      "breakpoints": true
     }
   ]
 }

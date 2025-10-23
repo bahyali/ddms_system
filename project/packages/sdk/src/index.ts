@@ -88,6 +88,13 @@ export interface paths {
      */
     delete: operations["deleteRelation"];
   };
+  "/indexes": {
+    /**
+     * List Field Index Jobs
+     * @description Retrieves the status of field indexing jobs for the current tenant.
+     */
+    get: operations["listFieldIndexes"];
+  };
   "/events": {
     /**
      * Subscribe to real-time events
@@ -304,6 +311,29 @@ export interface components {
        * @description The ID of the target record in the relation.
        */
       to_record_id: string;
+    };
+    FieldIndexJob: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      fieldId: string;
+      /** Format: uuid */
+      entityTypeId: string;
+      indexName: string;
+      /** @enum {string} */
+      status: "pending" | "in_progress" | "ready" | "failed";
+      attempts: number;
+      lastError?: string | null;
+      /** Format: date-time */
+      startedAt?: string | null;
+      /** Format: date-time */
+      completedAt?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      fieldKey: string;
+      fieldLabel: string;
     };
     SearchRequest: {
       filter?: components["schemas"]["Filter"];
@@ -743,6 +773,20 @@ export interface operations {
         content: never;
       };
       404: components["responses"]["NotFound"];
+    };
+  };
+  /**
+   * List Field Index Jobs
+   * @description Retrieves the status of field indexing jobs for the current tenant.
+   */
+  listFieldIndexes: {
+    responses: {
+      /** @description A list of field index jobs. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["FieldIndexJob"][];
+        };
+      };
     };
   };
   /**
