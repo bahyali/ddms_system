@@ -1,26 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { components } from '@ddms/sdk';
 
 type FieldDef = components['schemas']['FieldDef'];
 type FieldDefCreate = components['schemas']['FieldDefCreate'];
 type FieldDefUpdate = components['schemas']['FieldDefUpdate'];
 
-// A simplified local state that can hold all possible values
 interface FormState {
   key: string;
   label: string;
   kind: FieldDefCreate['kind'];
   required: boolean;
-  // text validation
   minLen?: number;
   maxLen?: number;
   regex?: string;
-  // number validation
   min?: number;
   max?: number;
   integer?: boolean;
-  // select options
-  enum?: string; // Stored as a newline-separated string in the form
+  enum?: string;
   multiselect?: boolean;
 }
 
@@ -33,7 +29,7 @@ const KINDS: FieldDefCreate['kind'][] = [
   'boolean',
 ];
 
-const initialFormState: FormState = {
+const INITIAL_FORM_STATE: FormState = {
   key: '',
   label: '',
   kind: 'text',
@@ -61,9 +57,8 @@ export const FieldDefForm = ({
   isLoading,
   onCancel,
 }: FieldDefFormProps) => {
-  const [formState, setFormState] = useState<FormState>(initialFormState);
-
-  const isEditMode = !!initialData;
+  const [formState, setFormState] = useState<FormState>(INITIAL_FORM_STATE);
+  const isEditMode = Boolean(initialData);
 
   useEffect(() => {
     if (initialData) {
@@ -82,20 +77,17 @@ export const FieldDefForm = ({
         multiselect: initialData.options?.multiselect,
       });
     } else {
-      setFormState(initialFormState);
+      setFormState(INITIAL_FORM_STATE);
     }
   }, [initialData]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) => {
-    const { name, value, type } = e.target;
-    const isCheckbox = type === 'checkbox';
-    const checked = isCheckbox ? (e.target as HTMLInputElement).checked : undefined;
-
+    const { name, value, type, checked } = e.target;
     setFormState((prev) => ({
       ...prev,
-      [name]: isCheckbox ? checked : value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -107,10 +99,9 @@ export const FieldDefForm = ({
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    // Build the payload
     const payload: Partial<FieldDefCreate | FieldDefUpdate> = {
       label: formState.label,
       required: formState.required,
@@ -121,7 +112,6 @@ export const FieldDefForm = ({
       (payload as FieldDefCreate).kind = formState.kind;
     }
 
-    // Add kind-specific options and validations
     if (formState.kind === 'text') {
       payload.validate = {
         text: {
@@ -140,7 +130,11 @@ export const FieldDefForm = ({
       };
     } else if (formState.kind === 'select') {
       payload.options = {
-        enum: formState.enum?.split('\n').filter(Boolean).map(s => s.trim()),
+        enum:
+          formState.enum
+            ?.split('\n')
+            .map((option) => option.trim())
+            .filter(Boolean) ?? [],
         multiselect: formState.multiselect,
       };
     }
@@ -148,18 +142,127 @@ export const FieldDefForm = ({
     onSubmit(payload as FieldDefCreate | FieldDefUpdate);
   };
 
+  const renderKindSpecificFields = () => {
+    switch (formState.kind) {
+      case 'text':
+        return (
+          <div className="surface-card surface-card--muted stack">
+            <h4 style={{ margin: 0 }}>Text validation</h4>
+            <div className="field-group">
+              <label htmlFor="minLen">Minimum length</label>
+              <input
+                id="minLen"
+                name="minLen"
+                type="number"
+                value={formState.minLen ?? ''}
+                onChange={handleNumberChange}
+              />
+            </div>
+            <div className="field-group">
+              <label htmlFor="maxLen">Maximum length</label>
+              <input
+                id="maxLen"
+                name="maxLen"
+                type="number"
+                value={formState.maxLen ?? ''}
+                onChange={handleNumberChange}
+              />
+            </div>
+            <div className="field-group">
+              <label htmlFor="regex">Regex</label>
+              <input
+                id="regex"
+                name="regex"
+                type="text"
+                value={formState.regex ?? ''}
+                placeholder="^PROJ-"
+                onChange={handleChange}
+              />
+              <span className="helper-text">Optional. Use for key prefixes or patterns.</span>
+            </div>
+          </div>
+        );
+      case 'number':
+        return (
+          <div className="surface-card surface-card--muted stack">
+            <h4 style={{ margin: 0 }}>Number validation</h4>
+            <div className="field-group">
+              <label htmlFor="min">Minimum</label>
+              <input
+                id="min"
+                name="min"
+                type="number"
+                value={formState.min ?? ''}
+                onChange={handleNumberChange}
+              />
+            </div>
+            <div className="field-group">
+              <label htmlFor="max">Maximum</label>
+              <input
+                id="max"
+                name="max"
+                type="number"
+                value={formState.max ?? ''}
+                onChange={handleNumberChange}
+              />
+            </div>
+            <label className="row" style={{ justifyContent: 'flex-start' }}>
+              <input
+                name="integer"
+                type="checkbox"
+                checked={formState.integer ?? false}
+                onChange={handleChange}
+              />
+              <span className="helper-text">Restrict to integers only</span>
+            </label>
+          </div>
+        );
+      case 'select':
+        return (
+          <div className="surface-card surface-card--muted stack">
+            <h4 style={{ margin: 0 }}>Select options</h4>
+            <div className="field-group">
+              <label htmlFor="enum">Enum values (one per line)</label>
+              <textarea
+                id="enum"
+                name="enum"
+                value={formState.enum ?? ''}
+                onChange={handleChange}
+              />
+            </div>
+            <label className="row" style={{ justifyContent: 'flex-start' }}>
+              <input
+                name="multiselect"
+                type="checkbox"
+                checked={formState.multiselect ?? false}
+                onChange={handleChange}
+              />
+              <span className="helper-text">Allow multiple selections</span>
+            </label>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} style={{ border: 'none', padding: 0 }}>
-      {/* Using a simple modal-like structure */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', zIndex: 1000
-      }}>
-        <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', width: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-          <h2>{isEditMode ? 'Edit Field' : 'Add New Field'}</h2>
-          
-          <div>
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
+      <form className="modal-panel stack" onSubmit={handleSubmit}>
+        <div className="modal-header">
+          <div className="stack-sm">
+            <h2 style={{ margin: 0 }}>{isEditMode ? 'Edit field' : 'Add field'}</h2>
+            <p className="helper-text">
+              Configure field metadata, validation, dependencies, and indexing.
+            </p>
+          </div>
+          <button type="button" className="button secondary" onClick={onCancel}>
+            Close
+          </button>
+        </div>
+
+        <div className="stack">
+          <div className="field-group">
             <label htmlFor="key">Key</label>
             <input
               id="key"
@@ -172,10 +275,12 @@ export const FieldDefForm = ({
               pattern="^[a-z0-9_]+$"
               title="Key must be lowercase letters, numbers, and underscores only."
             />
-            {isEditMode && <small>Key cannot be changed after creation.</small>}
+            {isEditMode && (
+              <span className="helper-text">Key cannot be changed after creation.</span>
+            )}
           </div>
 
-          <div>
+          <div className="field-group">
             <label htmlFor="label">Label</label>
             <input
               id="label"
@@ -187,7 +292,7 @@ export const FieldDefForm = ({
             />
           </div>
 
-          <div>
+          <div className="field-group">
             <label htmlFor="kind">Kind</label>
             <select
               id="kind"
@@ -196,92 +301,43 @@ export const FieldDefForm = ({
               onChange={handleChange}
               disabled={isEditMode}
             >
-              {KINDS.map((k) => (
-                <option key={k} value={k}>
-                  {k}
+              {KINDS.map((kind) => (
+                <option key={kind} value={kind}>
+                  {kind}
                 </option>
               ))}
             </select>
-            {isEditMode && <small>Kind cannot be changed after creation.</small>}
+            {isEditMode && (
+              <span className="helper-text">Kind cannot be changed after creation.</span>
+            )}
           </div>
 
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'normal' }}>
-              <input
-                name="required"
-                type="checkbox"
-                checked={formState.required}
-                onChange={handleChange}
-              />
-              Required
-            </label>
-          </div>
+          <label className="row" style={{ justifyContent: 'flex-start' }}>
+            <input
+              name="required"
+              type="checkbox"
+              checked={formState.required}
+              onChange={handleChange}
+            />
+            <span className="helper-text">Mark as required for contributors</span>
+          </label>
 
-          {/* Conditional Fields */}
-          {formState.kind === 'text' && (
-            <fieldset style={{ border: '1px solid #ccc', padding: '1rem', borderRadius: '4px', marginTop: '1rem' }}>
-              <legend>Text Validation</legend>
-              <div>
-                <label htmlFor="minLen">Min Length</label>
-                <input id="minLen" name="minLen" type="number" value={formState.minLen ?? ''} onChange={handleNumberChange} />
-              </div>
-              <div>
-                <label htmlFor="maxLen">Max Length</label>
-                <input id="maxLen" name="maxLen" type="number" value={formState.maxLen ?? ''} onChange={handleNumberChange} />
-              </div>
-              <div>
-                <label htmlFor="regex">Regex Pattern</label>
-                <input id="regex" name="regex" type="text" value={formState.regex ?? ''} onChange={handleChange} />
-              </div>
-            </fieldset>
-          )}
-
-          {formState.kind === 'number' && (
-            <fieldset style={{ border: '1px solid #ccc', padding: '1rem', borderRadius: '4px', marginTop: '1rem' }}>
-              <legend>Number Validation</legend>
-              <div>
-                <label htmlFor="min">Min Value</label>
-                <input id="min" name="min" type="number" value={formState.min ?? ''} onChange={handleNumberChange} />
-              </div>
-              <div>
-                <label htmlFor="max">Max Value</label>
-                <input id="max" name="max" type="number" value={formState.max ?? ''} onChange={handleNumberChange} />
-              </div>
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'normal' }}>
-                  <input name="integer" type="checkbox" checked={formState.integer ?? false} onChange={handleChange} />
-                  Must be an integer
-                </label>
-              </div>
-            </fieldset>
-          )}
-
-          {formState.kind === 'select' && (
-            <fieldset style={{ border: '1px solid #ccc', padding: '1rem', borderRadius: '4px', marginTop: '1rem' }}>
-              <legend>Select Options</legend>
-              <div>
-                <label htmlFor="enum">Options (one per line)</label>
-                <textarea id="enum" name="enum" value={formState.enum ?? ''} onChange={handleChange} />
-              </div>
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'normal' }}>
-                  <input name="multiselect" type="checkbox" checked={formState.multiselect ?? false} onChange={handleChange} />
-                  Allow multiple selections
-                </label>
-              </div>
-            </fieldset>
-          )}
-
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexDirection: 'row' }}>
-            <button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : 'Save Field'}
-            </button>
-            <button type="button" onClick={onCancel} style={{ backgroundColor: '#666' }}>
-              Cancel
-            </button>
-          </div>
+          {renderKindSpecificFields()}
         </div>
-      </div>
-    </form>
+
+        <div className="modal-actions">
+          <button type="button" className="button secondary" onClick={onCancel}>
+            Cancel
+          </button>
+          <button type="submit" disabled={isLoading}>
+            {isLoading
+              ? 'Saving…'
+              : isEditMode
+              ? 'Save changes'
+              : 'Create field'}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };

@@ -1,4 +1,5 @@
 import '~/styles/globals.css';
+import type { ReactElement } from 'react';
 import type { AppProps } from 'next/app';
 import {
   QueryClient,
@@ -8,6 +9,7 @@ import {
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState, useCallback } from 'react';
 import { useSse, type SseEvent } from '~/hooks/use-sse';
+import type { NextPageWithLayout } from '~/types/next';
 
 // A component that handles the SSE connection and cache invalidation
 const SseHandler = () => {
@@ -70,7 +72,11 @@ const SseHandler = () => {
   return null; // This component does not render anything
 };
 
-export default function App({ Component, pageProps }: AppProps) {
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout;
+};
+
+export default function App({ Component, pageProps }: AppPropsWithLayout) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -85,10 +91,13 @@ export default function App({ Component, pageProps }: AppProps) {
       })
   );
 
+  const getLayout =
+    Component.getLayout ?? ((page: ReactElement) => page);
+
   return (
     <QueryClientProvider client={queryClient}>
       <SseHandler />
-      <Component {...pageProps} />
+      {getLayout(<Component {...pageProps} />)}
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

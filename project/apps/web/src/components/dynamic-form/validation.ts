@@ -1,35 +1,30 @@
 import type { components } from '@ddms/sdk';
-import type { FieldOptions } from '@tanstack/react-form';
 
 type FieldDef = components['schemas']['FieldDef'];
 
-// A validator builder that translates our FieldDef validation rules
-// into a format that TanStack Form can understand.
-export function buildValidators<TData>(
-  fieldDef: FieldDef
-): FieldOptions<TData, string, unknown, unknown>['validators'] {
-  const validators: FieldOptions<TData, string, unknown, unknown>['validators'] = {};
+export type FieldValidator = (value: unknown) => string | undefined;
 
-  const allValidators: ((props: { value: unknown }) => string | undefined)[] = [];
+export function buildValidator(fieldDef: FieldDef): FieldValidator {
+  const validators: FieldValidator[] = [];
 
-  // Required validator
   if (fieldDef.required) {
-    allValidators.push(({ value }: { value: unknown }) => {
-      if (value === '' || value === null || value === undefined) {
-        return 'This field is required';
-      }
-      if (Array.isArray(value) && value.length === 0) {
+    validators.push((value) => {
+      if (
+        value === '' ||
+        value === null ||
+        value === undefined ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
         return 'This field is required';
       }
       return undefined;
     });
   }
 
-  // Kind-specific validators
   if (fieldDef.kind === 'text' && fieldDef.validate?.text) {
     const { minLen, maxLen, regex } = fieldDef.validate.text;
-    allValidators.push(({ value }: { value: unknown }) => {
-      if (typeof value !== 'string' || value === '') return; // Don't validate if not a string or empty
+    validators.push((value) => {
+      if (typeof value !== 'string' || value === '') return undefined;
       if (minLen && value.length < minLen) {
         return `Must be at least ${minLen} characters`;
       }
@@ -45,10 +40,10 @@ export function buildValidators<TData>(
 
   if (fieldDef.kind === 'number' && fieldDef.validate?.number) {
     const { min, max, integer } = fieldDef.validate.number;
-    allValidators.push(({ value }: { value: unknown }) => {
-      if (value === null || value === undefined || value === '') return; // Don't validate if empty
+    validators.push((value) => {
+      if (value === null || value === undefined || value === '') return undefined;
       const numValue = Number(value);
-      if (isNaN(numValue)) return 'Must be a number';
+      if (Number.isNaN(numValue)) return 'Must be a number';
       if (min !== undefined && numValue < min) {
         return `Must be at least ${min}`;
       }
@@ -62,15 +57,11 @@ export function buildValidators<TData>(
     });
   }
 
-  if (allValidators.length > 0) {
-    validators.onChange = (props: { value: unknown }) => {
-      for (const validator of allValidators) {
-        const error = validator(props);
-        if (error) return error;
-      }
-      return undefined;
-    };
-  }
-
-  return validators;
+  return (value) => {
+    for (const validator of validators) {
+      const error = validator(value);
+      if (error) return error;
+    }
+    return undefined;
+  };
 }

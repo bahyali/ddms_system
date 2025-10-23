@@ -203,10 +203,10 @@ export function FilterBuilder({
   };
 
   return (
-    <div
-      style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}
-    >
-      <h4>Filters</h4>
+    <div className="filter-builder">
+      {rules.length === 0 && (
+        <p className="helper-text">No filters applied yet. Add a condition to get started.</p>
+      )}
       {rules.map((rule) => {
         const selectedFieldDef = fieldDefMap.get(rule.fieldKey);
         const operators =
@@ -215,15 +215,7 @@ export function FilterBuilder({
             : [];
 
         return (
-          <div
-            key={rule.id}
-            style={{
-              display: 'flex',
-              gap: '0.5rem',
-              marginBottom: '0.5rem',
-              alignItems: 'center',
-            }}
-          >
+          <div key={rule.id} className="filter-rule">
             <select
               value={rule.fieldKey}
               onChange={(e) =>
@@ -253,16 +245,32 @@ export function FilterBuilder({
 
             {renderValueInput(rule)}
 
-            <button onClick={() => handleRemoveRule(rule.id)}>Remove</button>
+            <button
+              type="button"
+              className="button secondary"
+              onClick={() => handleRemoveRule(rule.id)}
+              aria-label="Remove filter"
+            >
+              Remove
+            </button>
           </div>
         );
       })}
-      <button onClick={handleAddRule} disabled={fieldDefs.length === 0}>
-        Add filter
-      </button>
-      <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-        <button onClick={handleApply}>Apply</button>
-        <button onClick={handleClear}>Clear</button>
+      <div className="row row-wrap" style={{ marginTop: 'var(--space-3)' }}>
+        <button
+          type="button"
+          className="button secondary"
+          onClick={handleAddRule}
+          disabled={fieldDefs.length === 0}
+        >
+          Add condition
+        </button>
+        <button type="button" onClick={handleApply}>
+          Apply
+        </button>
+        <button type="button" className="button secondary" onClick={handleClear}>
+          Reset
+        </button>
       </div>
     </div>
   );

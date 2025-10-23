@@ -1,29 +1,32 @@
-import { useRouter } from 'next/router';
-import Link from 'next/link';
 import Head from 'next/head';
-import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useMemo, useState } from 'react';
 import type { components } from '@ddms/sdk';
 
 import { useGetEntityType } from '~/hooks/useEntityTypesApi';
 import {
-  useGetFieldDefs,
   useCreateFieldDef,
+  useGetFieldDefs,
   useUpdateFieldDef,
 } from '~/hooks/useFieldDefsApi';
 import { FieldDefList } from '~/components/field-defs/FieldDefList';
 import { FieldDefForm } from '~/components/field-defs/FieldDefForm';
+import { AppLayout } from '~/components/layout/AppLayout';
+import type { NextPageWithLayout } from '~/types/next';
 
 type FieldDef = components['schemas']['FieldDef'];
 type FieldDefCreate = components['schemas']['FieldDefCreate'];
 type FieldDefUpdate = components['schemas']['FieldDefUpdate'];
 
-const EntityTypeDetailPage = () => {
+const EntityTypeDetailPage: NextPageWithLayout = () => {
   const router = useRouter();
   const { id } = router.query;
   const entityTypeId = typeof id === 'string' ? id : '';
 
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedField, setSelectedField] = useState<FieldDef | null>(null);
+  const [activeTab, setActiveTab] = useState<'fields' | 'permissions' | 'schema'>('fields');
 
   const {
     data: entityType,
@@ -42,6 +45,20 @@ const EntityTypeDetailPage = () => {
   const createFieldDef = useCreateFieldDef(entityTypeId);
   const updateFieldDef = useUpdateFieldDef(entityTypeId);
 
+  const overviewCards = useMemo(() => {
+    if (!entityType) {
+      return [];
+    }
+    return [
+      { label: 'Key', value: entityType.key },
+      { label: 'Entity type ID', value: entityType.id },
+      {
+        label: 'Description',
+        value: entityType.description ? 'Provided' : 'Not set',
+      },
+    ];
+  }, [entityType]);
+
   const handleOpenFormForCreate = () => {
     setSelectedField(null);
     setFormOpen(true);
@@ -59,72 +76,193 @@ const EntityTypeDetailPage = () => {
 
   const handleSubmit = (data: FieldDefCreate | FieldDefUpdate) => {
     if (selectedField) {
-      // Update mode
       updateFieldDef.mutate(
         { id: selectedField.id, fieldDef: data as FieldDefUpdate },
         {
           onSuccess: handleCloseForm,
           onError: (error) => alert(`Error updating field: ${error.message}`),
-        }
+        },
       );
-    } else {
-      // Create mode
-      createFieldDef.mutate(data as FieldDefCreate, {
-        onSuccess: handleCloseForm,
-        onError: (error) => alert(`Error creating field: ${error.message}`),
-      });
+      return;
     }
-  };
 
-  if (isLoadingEntityType) return <main><p>Loading entity type...</p></main>;
-  if (isEntityTypeError) return <main><p className="error">Error: {entityTypeError.message}</p></main>;
-  if (!entityType) return <main><p>Entity type not found.</p></main>;
+    createFieldDef.mutate(data as FieldDefCreate, {
+      onSuccess: handleCloseForm,
+      onError: (error) => alert(`Error creating field: ${error.message}`),
+    });
+  };
 
   const mutationError = createFieldDef.error || updateFieldDef.error;
 
   return (
     <>
       <Head>
-        <title>Manage {entityType.label} | DDMS</title>
+        <title>
+          {entityType ? `Manage ${entityType.label}` : 'Entity Type'} | DDMS
+        </title>
       </Head>
-      <main>
-        <Link href="/admin/entity-types">Back to list</Link>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h1>{entityType.label}</h1>
-          <Link href={`/admin/entity-types/${entityTypeId}/edit`} passHref>
-            <button style={{backgroundColor: '#f0ad4e'}}>Edit Details</button>
-          </Link>
-        </div>
-        <p>Key: <code>{entityType.key}</code></p>
-        {entityType.description && <p>{entityType.description}</p>}
 
-        <hr style={{ margin: '2rem 0' }} />
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>Fields</h2>
-          <button onClick={handleOpenFormForCreate}>Add New Field</button>
-        </div>
-
-        {isLoadingFieldDefs && <p>Loading fields...</p>}
-        {isFieldDefsError && <p className="error">Error: {fieldDefsError.message}</p>}
-        {fieldDefs && <FieldDefList fieldDefs={fieldDefs} onEditField={handleOpenFormForEdit} />}
-
-        {isFormOpen && (
-          <FieldDefForm
-            initialData={selectedField}
-            onSubmit={handleSubmit}
-            isLoading={createFieldDef.isPending || updateFieldDef.isPending}
-            onCancel={handleCloseForm}
-          />
+      <div className="stack">
+        {isLoadingEntityType && <p className="helper-text">Loading entity type…</p>}
+        {isEntityTypeError && (
+          <p className="error">Error: {entityTypeError.message}</p>
         )}
-        {mutationError && (
-          <p className="error" style={{ marginTop: '1rem' }}>
-            Error saving field: {mutationError.message}
-          </p>
+        {!entityType && !isLoadingEntityType && !isEntityTypeError && (
+          <div className="empty-state">
+            <h3>Entity type not found</h3>
+            <p>
+              It may have been removed. Return to the catalog to review available entity
+              types.
+            </p>
+            <Link href="/admin/entity-types" className="button">
+              Back to catalog
+            </Link>
+          </div>
         )}
-      </main>
+
+        {entityType && (
+          <>
+            <section className="surface-card">
+              <div className="row row-wrap" style={{ justifyContent: 'space-between' }}>
+                <div className="stack-sm">
+                  <h2 style={{ margin: 0 }}>{entityType.label}</h2>
+                  <p className="helper-text">
+                    Iterate safely—changes sync to dynamic forms and validation in real time.
+                  </p>
+                </div>
+                <Link
+                  href={`/admin/entity-types/${entityTypeId}/edit`}
+                  className="button secondary"
+                >
+                  Edit details
+                </Link>
+              </div>
+
+              <div className="metadata-grid" style={{ marginTop: 'var(--space-4)' }}>
+                {overviewCards.map((card) => (
+                  <div className="metadata-item" key={card.label}>
+                    <span className="label">{card.label}</span>
+                    <span className="value">{card.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {entityType.description && (
+                <p style={{ marginTop: 'var(--space-4)', color: 'var(--text-muted)' }}>
+                  {entityType.description}
+                </p>
+              )}
+            </section>
+
+            <section className="stack">
+              <div className="tab-list">
+                <button
+                  type="button"
+                  className={`tab-button${activeTab === 'fields' ? ' is-active' : ''}`}
+                  onClick={() => setActiveTab('fields')}
+                >
+                  Fields
+                </button>
+                <button
+                  type="button"
+                  className={`tab-button${activeTab === 'permissions' ? ' is-active' : ''}`}
+                  onClick={() => setActiveTab('permissions')}
+                >
+                  Permissions
+                </button>
+                <button
+                  type="button"
+                  className={`tab-button${activeTab === 'schema' ? ' is-active' : ''}`}
+                  onClick={() => setActiveTab('schema')}
+                >
+                  JSON Schema
+                </button>
+              </div>
+
+              <div className="tab-panels">
+                {activeTab === 'fields' && (
+                  <div className="surface-card stack">
+                    <div className="row row-wrap" style={{ justifyContent: 'space-between' }}>
+                      <div className="stack-sm">
+                        <h3 style={{ margin: 0 }}>Fields</h3>
+                        <p className="helper-text">
+                          Add data points, change validation rules, or toggle indexing to
+                          improve lookups.
+                        </p>
+                      </div>
+                      <button type="button" onClick={handleOpenFormForCreate}>
+                        Add field
+                      </button>
+                    </div>
+
+                    {isLoadingFieldDefs && <p className="helper-text">Loading fields…</p>}
+                    {isFieldDefsError && (
+                      <p className="error">Error: {fieldDefsError.message}</p>
+                    )}
+                    {fieldDefs && (
+                      <FieldDefList
+                        fieldDefs={fieldDefs}
+                        onEditField={handleOpenFormForEdit}
+                        onCreateField={handleOpenFormForCreate}
+                      />
+                    )}
+                    {mutationError && (
+                      <p className="error">Error saving field: {mutationError.message}</p>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'permissions' && (
+                  <div className="surface-card surface-card--muted stack">
+                    <h3 style={{ margin: 0 }}>Permissions</h3>
+                    <p className="helper-text">
+                      Role-aware access controls are being wired up. Soon you&rsquo;ll assign
+                      read/write access per field and role from here.
+                    </p>
+                    <span className="badge warning">In design</span>
+                  </div>
+                )}
+
+                {activeTab === 'schema' && (
+                  <div className="surface-card surface-card--muted stack">
+                    <h3 style={{ margin: 0 }}>JSON Schema</h3>
+                    <p className="helper-text">
+                      Export OpenAPI + JSON Schema representations once generated. They unlock
+                      SDK scaffolding and contract testing.
+                    </p>
+                    <span className="badge">Coming soon</span>
+                  </div>
+                )}
+              </div>
+            </section>
+          </>
+        )}
+      </div>
+
+      {isFormOpen && (
+        <FieldDefForm
+          initialData={selectedField}
+          onSubmit={handleSubmit}
+          isLoading={createFieldDef.isPending || updateFieldDef.isPending}
+          onCancel={handleCloseForm}
+        />
+      )}
     </>
   );
 };
+
+EntityTypeDetailPage.getLayout = (page) => (
+  <AppLayout
+    title="Entity type detail"
+    subtitle="Review schema, manage fields, and prepare dependencies before rolling out."
+    breadcrumbs={[
+      { label: 'Build', href: '/admin/entity-types' },
+      { label: 'Entity Types', href: '/admin/entity-types' },
+      { label: 'Detail' },
+    ]}
+  >
+    {page}
+  </AppLayout>
+);
 
 export default EntityTypeDetailPage;

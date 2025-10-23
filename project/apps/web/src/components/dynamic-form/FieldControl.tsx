@@ -1,78 +1,105 @@
-import type { FieldApi } from '@tanstack/react-form';
 import type { components } from '@ddms/sdk';
 
 type FieldDef = components['schemas']['FieldDef'];
 
 interface FieldControlProps {
-  field: FieldApi<Record<string, unknown>, string, unknown, unknown>;
+  fieldKey: string;
   fieldDef: FieldDef;
+  value: unknown;
+  error?: string;
+  onChange: (value: unknown) => void;
+  onBlur: () => void;
 }
 
-export function FieldControl({ field, fieldDef }: FieldControlProps) {
-  const commonProps = {
-    id: field.name,
-    name: field.name,
-    value: field.state.value ?? '',
-    onBlur: field.handleBlur,
-  };
+export function FieldControl({
+  fieldKey,
+  fieldDef,
+  value,
+  error,
+  onChange,
+  onBlur,
+}: FieldControlProps) {
+  const commonInputProps = {
+    id: fieldKey,
+    name: fieldKey,
+    onBlur,
+    'aria-invalid': Boolean(error),
+    'aria-describedby': error ? `${fieldKey}-error` : undefined,
+  } as const;
 
   switch (fieldDef.kind) {
     case 'text':
       return (
         <input
-          {...commonProps}
+          {...commonInputProps}
           type="text"
-          onChange={(e) => field.handleChange(e.target.value)}
+          value={typeof value === 'string' ? value : ''}
+          onChange={(event) => onChange(event.target.value)}
         />
       );
+
     case 'number':
       return (
         <input
-          {...commonProps}
+          {...commonInputProps}
           type="number"
-          onChange={(e) =>
-            field.handleChange(e.target.value === '' ? null : e.target.valueAsNumber)
-          }
+          value={typeof value === 'number' || value === '' ? value ?? '' : ''}
+          onChange={(event) => {
+            const nextValue = event.target.value;
+            onChange(nextValue === '' ? '' : Number(nextValue));
+          }}
         />
       );
+
     case 'date':
       return (
         <input
-          {...commonProps}
+          {...commonInputProps}
           type="date"
-          onChange={(e) => field.handleChange(e.target.value)}
+          value={typeof value === 'string' ? value : ''}
+          onChange={(event) => onChange(event.target.value)}
         />
       );
+
     case 'boolean':
       return (
         <input
-          id={field.name}
-          name={field.name}
+          {...commonInputProps}
           type="checkbox"
-          checked={!!field.state.value}
-          onBlur={field.handleBlur}
-          onChange={(e) => field.handleChange(e.target.checked)}
-          style={{ alignSelf: 'flex-start', width: 'auto', height: '1.5rem' }}
+          checked={Boolean(value)}
+          onChange={(event) => onChange(event.target.checked)}
+          style={{ alignSelf: 'flex-start', width: 'auto' }}
         />
       );
-    case 'select':
+
+    case 'select': {
+      const isMultiselect = Boolean(fieldDef.options?.multiselect);
+      const selectProps = {
+        ...commonInputProps,
+        multiple: isMultiselect,
+        value: isMultiselect
+          ? Array.isArray(value)
+            ? value
+            : []
+          : typeof value === 'string'
+          ? value
+          : '',
+        onChange: (event: React.ChangeEvent<HTMLSelectElement>) => {
+          if (isMultiselect) {
+            const selectedValues = Array.from(
+              event.target.selectedOptions,
+              (option) => option.value,
+            );
+            onChange(selectedValues);
+          } else {
+            onChange(event.target.value);
+          }
+        },
+      };
+
       return (
-        <select
-          {...commonProps}
-          multiple={fieldDef.options?.multiselect}
-          onChange={(e) => {
-            if (fieldDef.options?.multiselect) {
-              const selected = Array.from(
-                e.target.selectedOptions,
-                (option) => option.value
-              );
-              field.handleChange(selected);
-            } else {
-              field.handleChange(e.target.value);
-            }
-          }}
-        >
-          {!fieldDef.options?.multiselect && <option value="">Select...</option>}
+        <select {...selectProps}>
+          {!isMultiselect && <option value="">Select…</option>}
           {fieldDef.options?.enum?.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -80,17 +107,19 @@ export function FieldControl({ field, fieldDef }: FieldControlProps) {
           ))}
         </select>
       );
-    // 'relation' kind is treated as a text input for now.
-    // A more advanced implementation would use an async search picker.
+    }
+
     case 'relation':
       return (
         <input
-          {...commonProps}
+          {...commonInputProps}
           type="text"
           placeholder="Enter related record ID"
-          onChange={(e) => field.handleChange(e.target.value)}
+          value={typeof value === 'string' ? value : ''}
+          onChange={(event) => onChange(event.target.value)}
         />
       );
+
     default:
       return <p>Unsupported field kind: {fieldDef.kind}</p>;
   }

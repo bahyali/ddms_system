@@ -46,7 +46,7 @@ export const EntityTypeForm = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div>
+      <div className="field-group">
         <label htmlFor="key">Key</label>
         <input
           id="key"
@@ -58,9 +58,13 @@ export const EntityTypeForm = ({
           pattern="^[a-z0-9_]+$"
           title="Key must be lowercase letters, numbers, and underscores only."
         />
-        {isEditMode && <small>Key cannot be changed after creation.</small>}
+        {isEditMode && (
+          <span className="helper-text">
+            Key cannot be changed after creation.
+          </span>
+        )}
       </div>
-      <div>
+      <div className="field-group">
         <label htmlFor="label">Label</label>
         <input
           id="label"
@@ -70,7 +74,7 @@ export const EntityTypeForm = ({
           required
         />
       </div>
-      <div>
+      <div className="field-group">
         <label htmlFor="description">Description</label>
         <textarea
           id="description"
