@@ -9,6 +9,8 @@ import { DynamicForm } from '~/components/dynamic-form';
 import { useGetEntityTypeByKey, useGetEntityTypes } from '~/hooks/useEntityTypesApi';
 import { useGetFieldDefs } from '~/hooks/useFieldDefsApi';
 import { useGetRecord, useUpdateRecord } from '~/hooks/useRecordsApi';
+import { useRelations } from '~/hooks/useRelationsApi';
+import type { RelationWithContext } from '~/hooks/useRelationsApi';
 
 type ValidationError = components['schemas']['ValidationErrorDetail'];
 
@@ -42,9 +44,64 @@ const EditRecordPage = () => {
     return map;
   }, [allEntityTypes]);
 
+  const {
+    data: outgoingRelations,
+    isLoading: isLoadingOutgoingRelations,
+  } = useRelations({
+    recordId: id,
+    role: 'from',
+    enabled: Boolean(id),
+  });
+
+  const {
+    data: incomingRelations,
+    isLoading: isLoadingIncomingRelations,
+  } = useRelations({
+    recordId: id,
+    role: 'to',
+    enabled: Boolean(id),
+  });
+
   const updateRecord = useUpdateRecord(key, id);
 
-  const isLoading = isLoadingEntityType || isLoadingFieldDefs || isLoadingRecord;
+  const isLoading =
+    isLoadingEntityType ||
+    isLoadingFieldDefs ||
+    isLoadingRecord ||
+    isLoadingOutgoingRelations;
+
+  const outgoingGroups = useMemo(() => groupRelations(outgoingRelations), [outgoingRelations]);
+  const incomingGroups = useMemo(() => groupRelations(incomingRelations), [incomingRelations]);
+
+  const relationInitialValues = useMemo(() => {
+    if (!fieldDefs || !outgoingRelations) return {};
+    const fieldById = new Map(fieldDefs.map((field) => [field.id, field]));
+    const accumulator: Record<string, unknown> = {};
+    outgoingRelations.forEach((relation) => {
+      const field = fieldById.get(relation.field.id);
+      if (!field) return;
+      const cardinality = relation.field.cardinality ?? 'one';
+      const fieldKey = field.key;
+      if (cardinality === 'many') {
+        const current = (accumulator[fieldKey] as string[] | undefined) ?? [];
+        if (!current.includes(relation.relatedRecord.id)) {
+          accumulator[fieldKey] = [...current, relation.relatedRecord.id];
+        } else {
+          accumulator[fieldKey] = current;
+        }
+      } else {
+        accumulator[fieldKey] = relation.relatedRecord.id;
+      }
+    });
+    return accumulator;
+  }, [fieldDefs, outgoingRelations]);
+
+  const initialFormData = useMemo(() => {
+    return {
+      ...(record?.data ?? {}),
+      ...relationInitialValues,
+    } as Record<string, unknown>;
+  }, [record, relationInitialValues]);
 
   const metadata = useMemo(() => {
     if (!record) return [];
@@ -169,7 +226,7 @@ const EditRecordPage = () => {
               </div>
               <DynamicForm
                 fieldDefs={fieldDefs}
-                initialData={record.data}
+                initialData={initialFormData as Record<string, unknown>}
                 onSubmit={handleSubmit}
                 isLoading={updateRecord.isPending}
                 onCancel={() => router.push(`/entities/${key}`)}
@@ -190,9 +247,138 @@ const EditRecordPage = () => {
             </Link>
           </div>
         )}
+
+        {!isLoading && record && (
+          <section className="surface-card stack">
+            <h3 style={{ margin: 0 }}>Relationships</h3>
+            {isLoadingOutgoingRelations || isLoadingIncomingRelations ? (
+              <p className="helper-text">Loading relations…</p>
+            ) : outgoingGroups.length === 0 && incomingGroups.length === 0 ? (
+              <p className="helper-text">No relations yet.</p>
+            ) : (
+              <div className="stack">
+                {outgoingGroups.length > 0 && (
+                  <RelationGroupList
+                    title="Linked from this record"
+                    description="These links are stored on this entity type."
+                    groups={outgoingGroups}
+                    entityTypesById={entityTypesById}
+                  />
+                )}
+                {incomingGroups.length > 0 && (
+                  <RelationGroupList
+                    title="Linked to this record"
+                    description="Other records refer to this record via relation fields."
+                    groups={incomingGroups}
+                    entityTypesById={entityTypesById}
+                    highlightTarget
+                  />
+                )}
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </AppLayout>
   );
 };
+
+type RelationGroup = {
+  field: RelationWithContext['field'];
+  items: RelationWithContext[];
+};
+
+function groupRelations(relations?: RelationWithContext[] | null): RelationGroup[] {
+  if (!relations || relations.length === 0) {
+    return [];
+  }
+  const map = new Map<string, RelationGroup>();
+  relations.forEach((relation) => {
+    const existing = map.get(relation.field.id);
+    if (existing) {
+      existing.items.push(relation);
+    } else {
+      map.set(relation.field.id, {
+        field: relation.field,
+        items: [relation],
+      });
+    }
+  });
+  return Array.from(map.values());
+}
+
+interface RelationGroupListProps {
+  title: string;
+  description: string;
+  groups: RelationGroup[];
+  entityTypesById?: Map<string, { key: string; label: string }>;
+  highlightTarget?: boolean;
+}
+
+function RelationGroupList({
+  title,
+  description,
+  groups,
+  entityTypesById,
+  highlightTarget,
+}: RelationGroupListProps) {
+  if (groups.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="stack">
+      <div className="stack-sm">
+        <h4 style={{ margin: 0 }}>{title}</h4>
+        <p className="helper-text">{description}</p>
+      </div>
+      <div className="stack">
+        {groups.map((group) => (
+          <div key={group.field.id} className="surface-card surface-card--muted stack">
+            <strong>{group.field.label}</strong>
+            <div className="stack-sm">
+              {group.items.map((relation) => {
+                const targetEntityId = relation.relatedRecord.entityTypeId;
+                const targetEntity = entityTypesById?.get(targetEntityId);
+                const targetEntityLabel = targetEntity?.label ?? targetEntityId;
+                const targetEntityKey = targetEntity?.key;
+                const href = targetEntityKey
+                  ? `/entities/${targetEntityKey}/${relation.relatedRecord.id}`
+                  : undefined;
+
+                return (
+                  <div key={relation.id} className="stack-sm">
+                    <span className="helper-text">
+                      {targetEntityLabel} • {relation.direction === 'from' ? 'from this record' : 'to this record'}
+                    </span>
+                    {href ? (
+                      <Link href={href} className="button secondary">
+                        {formatRelationLabel(relation)}
+                      </Link>
+                    ) : (
+                      <span className="helper-text">{formatRelationLabel(relation)}</span>
+                    )}
+                    {highlightTarget && relation.field.targetEntityTypeId && (
+                      <span className="helper-text">
+                        Field owner: {entityTypesById?.get(relation.field.entityTypeId)?.label ?? relation.field.entityTypeId}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function formatRelationLabel(relation: RelationWithContext): string {
+  if (relation.relatedRecord.label && relation.relatedRecord.label.length > 0) {
+    return relation.relatedRecord.label;
+  }
+  return relation.relatedRecord.id.slice(0, 8);
+}
 
 export default EditRecordPage;

@@ -10,6 +10,7 @@ import {
 import * as recordDal from '../../lib/dal/records';
 import * as metadataDal from '../../lib/dal/metadata';
 import * as schema from '@ddms/db';
+import { replaceEdgesForField } from '../../lib/dal/edges';
 import { recordAuditEvent } from '../../lib/audit';
 import {
   entityTypeKeyParamsSchema,
@@ -99,12 +100,32 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const recordData = validationResult.data;
-      const newRecord = await recordDal.createRecord(
-        request.db,
-        request.tenantId,
-        entityType.id,
-        { data: recordData, createdBy: user.id },
+      const relationInputs = extractRelationInputs(
+        fieldDefs,
+        recordData,
       );
+
+      const newRecord = await request.db.transaction(async (tx) => {
+        const createdRecord = await recordDal.createRecord(
+          tx,
+          request.tenantId,
+          entityType.id,
+          { data: recordData, createdBy: user.id },
+        );
+
+        for (const relation of relationInputs) {
+          await replaceEdgesForField(
+            tx,
+            request.tenantId,
+            relation.field.id,
+            createdRecord.id,
+            relation.values,
+            user.id,
+          );
+        }
+
+        return createdRecord;
+      });
 
       await recordAuditEvent(request.db, fastify.log, {
         tenantId: request.tenantId,
@@ -324,13 +345,37 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const partialData = validationResult.data;
-      const updatedRecord = await recordDal.updateRecord(
-        request.db,
-        request.tenantId,
-        recordId,
-        version,
-        { data: partialData, updatedBy: user.id },
+      const relationUpdates = extractRelationInputs(
+        fieldDefs,
+        partialData,
       );
+
+      const updatedRecord = await request.db.transaction(async (tx) => {
+        const record = await recordDal.updateRecord(
+          tx,
+          request.tenantId,
+          recordId,
+          version,
+          { data: partialData, updatedBy: user.id },
+        );
+
+        if (!record) {
+          return null;
+        }
+
+        for (const relation of relationUpdates) {
+          await replaceEdgesForField(
+            tx,
+            request.tenantId,
+            relation.field.id,
+            recordId,
+            relation.values,
+            user.id,
+          );
+        }
+
+        return record;
+      });
 
       if (!updatedRecord) {
         // This can happen in a race condition if the record was updated after our version check
@@ -366,3 +411,49 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
 };
 
 export default entitiesRoutes;
+
+function normalizeRelationIds(
+  field: FieldDef,
+  value: unknown,
+): string[] | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value === null) {
+    return [];
+  }
+  const toStringArray = (input: unknown): string[] => {
+    if (Array.isArray(input)) {
+      return input
+        .map((item) => String(item).trim())
+        .filter((item) => item.length > 0);
+    }
+    const str = String(input).trim();
+    if (!str) return [];
+    return [str];
+  };
+
+  const ids = toStringArray(value);
+  const relationOptions = (field.options as {
+    relation?: { cardinality?: 'one' | 'many' };
+  } | null)?.relation;
+  if (relationOptions?.cardinality !== 'many' && ids.length > 1) {
+    return ids.slice(0, 1);
+  }
+  return ids;
+}
+
+function extractRelationInputs(
+  fieldDefs: FieldDef[],
+  data: Record<string, unknown>,
+) {
+  const relations: Array<{ field: FieldDef; values: string[] }> = [];
+  for (const field of fieldDefs) {
+    if (field.kind !== 'relation') continue;
+    if (!(field.key in data)) continue;
+    const normalized = normalizeRelationIds(field, data[field.key]);
+    if (normalized === undefined) continue;
+    relations.push({ field, values: normalized });
+  }
+  return relations;
+}

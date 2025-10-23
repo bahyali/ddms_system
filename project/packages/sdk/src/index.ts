@@ -295,6 +295,41 @@ export interface components {
       /** Format: date-time */
       createdAt: string;
     };
+    RelationWithContext: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      field_id: string;
+      /** Format: uuid */
+      from_record_id: string;
+      /** Format: uuid */
+      to_record_id: string;
+      /** Format: uuid */
+      createdBy?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** @enum {string} */
+      direction: "from" | "to";
+      field: {
+        /** Format: uuid */
+        id: string;
+        key: string;
+        label: string;
+        /** Format: uuid */
+        entityTypeId: string;
+        /** Format: uuid */
+        targetEntityTypeId?: string | null;
+        /** @enum {string} */
+        cardinality?: "one" | "many" | null;
+      };
+      relatedRecord: {
+        /** Format: uuid */
+        id: string;
+        /** Format: uuid */
+        entityTypeId: string;
+        label?: string | null;
+      };
+    };
     RelationCreate: {
       /**
        * Format: uuid
@@ -715,22 +750,24 @@ export interface operations {
   };
   /**
    * List Relations
-   * @description Retrieves a list of relations, typically filtered by the source record and field.
+   * @description Retrieves relations for a record, optionally filtered by field and direction.
    */
   listRelations: {
     parameters: {
       query: {
-        /** @description The ID of the source record to filter relations by. */
-        from_record_id: string;
-        /** @description The ID of the relation field to filter relations by. */
-        field_id: string;
+        /** @description The record to use when searching for relations. */
+        record_id: string;
+        /** @description Whether to return relations where the record is the source (`from`) or target (`to`). */
+        role?: "from" | "to";
+        /** @description If provided, limits results to a specific relation field. */
+        field_id?: string;
       };
     };
     responses: {
       /** @description A list of relations. */
       200: {
         content: {
-          "application/json": components["schemas"]["Relation"][];
+          "application/json": components["schemas"]["RelationWithContext"][];
         };
       };
       400: components["responses"]["BadRequest"];

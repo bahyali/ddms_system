@@ -8,10 +8,133 @@ import {
   createRelationBodySchema,
   relationIdParamsSchema,
   relationSchema,
+  listRelationsQuerySchema,
+  relationWithContextSchema,
 } from './schemas';
 import { recordAuditEvent } from '../../lib/audit';
+import { and, eq } from 'drizzle-orm';
+import * as schema from '@ddms/db';
 
 const relationsRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get(
+    '/relations',
+    {
+      schema: {
+        tags: ['Relations'],
+        summary: 'List Relations',
+        querystring: listRelationsQuerySchema,
+        response: {
+          200: relationWithContextSchema.array(),
+        },
+      },
+    },
+    async (request, reply) => {
+      if (!hasPermission(request.user, 'relation:read')) {
+        return reply.code(403).send({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to view relations.',
+        });
+      }
+
+      const { record_id, field_id, role = 'from' } = listRelationsQuerySchema.parse(
+        request.query,
+      );
+
+      const filters = [eq(schema.edges.tenantId, request.tenantId)];
+      if (field_id) {
+        filters.push(eq(schema.edges.fieldId, field_id));
+      }
+      if (role === 'from') {
+        filters.push(eq(schema.edges.fromRecordId, record_id));
+      } else {
+        filters.push(eq(schema.edges.toRecordId, record_id));
+      }
+
+      const edges = await request.db
+        .select({
+          id: schema.edges.id,
+          fieldId: schema.edges.fieldId,
+          fromRecordId: schema.edges.fromRecordId,
+          toRecordId: schema.edges.toRecordId,
+          createdBy: schema.edges.createdBy,
+          createdAt: schema.edges.createdAt,
+          fieldKey: schema.fieldDefs.key,
+          fieldLabel: schema.fieldDefs.label,
+          fieldEntityTypeId: schema.fieldDefs.entityTypeId,
+          fieldOptions: schema.fieldDefs.options,
+        })
+        .from(schema.edges)
+        .innerJoin(schema.fieldDefs, eq(schema.edges.fieldId, schema.fieldDefs.id))
+        .where(and(...filters));
+
+      const relatedIds = new Set<string>();
+      for (const edge of edges) {
+        const relatedId = role === 'from' ? edge.toRecordId : edge.fromRecordId;
+        relatedIds.add(relatedId);
+      }
+
+      const relatedRecords = new Map<string, Awaited<ReturnType<typeof recordDal.findRecordById>>>();
+      await Promise.all(
+        Array.from(relatedIds).map(async (relatedId) => {
+          const related = await recordDal.findRecordById(
+            request.db,
+            request.tenantId,
+            relatedId,
+          );
+          if (related) {
+            relatedRecords.set(relatedId, related);
+          }
+        }),
+      );
+
+      const responsePayload = edges.map((edge) => {
+        const relationOptions = (edge.fieldOptions as {
+          relation?: { target_entity_type_id?: string; cardinality?: 'one' | 'many' };
+        } | null)?.relation;
+
+        const relatedId = role === 'from' ? edge.toRecordId : edge.fromRecordId;
+        const relatedRecord = relatedRecords.get(relatedId) ?? null;
+        const relatedData = relatedRecord?.data as Record<string, unknown> | undefined;
+        const labelFromData = relatedData
+          ? ['name', 'label', 'title']
+              .map((key) => relatedData[key])
+              .find((value): value is string => typeof value === 'string' && value.length > 0) ?? null
+          : null;
+
+        const relatedEntityTypeId =
+          relatedRecord?.entityTypeId ??
+          (role === 'from'
+            ? relationOptions?.target_entity_type_id ?? edge.fieldEntityTypeId
+            : edge.fieldEntityTypeId);
+
+        return {
+          id: edge.id,
+          field_id: edge.fieldId,
+          from_record_id: edge.fromRecordId,
+          to_record_id: edge.toRecordId,
+          createdBy: edge.createdBy,
+          createdAt: edge.createdAt.toISOString(),
+          direction: role,
+          field: {
+            id: edge.fieldId,
+            key: edge.fieldKey,
+            label: edge.fieldLabel,
+            entityTypeId: edge.fieldEntityTypeId,
+            targetEntityTypeId: relationOptions?.target_entity_type_id ?? null,
+            cardinality: relationOptions?.cardinality ?? null,
+          },
+          relatedRecord: {
+            id: relatedId,
+            entityTypeId: relatedEntityTypeId,
+            label: labelFromData,
+          },
+        };
+      });
+
+      return reply.send(responsePayload);
+    },
+  );
+
   // Create Relation
   fastify.post(
     '/relations',

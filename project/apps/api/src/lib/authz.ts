@@ -24,6 +24,7 @@ const rbacRules: Record<string, string[]> = {
   'record:read': ['admin', 'builder', 'contributor', 'viewer'],
   'relation:create': ['admin', 'builder', 'contributor'],
   'relation:delete': ['admin', 'builder', 'contributor'],
+  'relation:read': ['admin', 'builder', 'contributor', 'viewer'],
   'index:read': ['admin', 'builder'],
 };
 

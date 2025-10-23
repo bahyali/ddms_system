@@ -62,3 +62,47 @@ export async function deleteEdge(db: Db, tenantId: string, edgeId: string) {
     .returning();
   return result;
 }
+
+/**
+ * Replaces all edges for a given record and field with the provided target IDs.
+ * @param db The Drizzle database instance.
+ * @param tenantId The tenant ID.
+ * @param fieldId The relation field definition ID.
+ * @param fromRecordId The source record ID.
+ * @param toRecordIds A list of target record IDs.
+ * @param actorId The user performing the operation.
+ */
+export async function replaceEdgesForField(
+  db: Db,
+  tenantId: string,
+  fieldId: string,
+  fromRecordId: string,
+  toRecordIds: string[],
+  actorId?: string,
+) {
+  await db
+    .delete(schema.edges)
+    .where(
+      and(
+        eq(schema.edges.tenantId, tenantId),
+        eq(schema.edges.fieldId, fieldId),
+        eq(schema.edges.fromRecordId, fromRecordId),
+      ),
+    );
+
+  if (toRecordIds.length === 0) {
+    return;
+  }
+
+  const uniqueIds = Array.from(new Set(toRecordIds));
+
+  await db.insert(schema.edges).values(
+    uniqueIds.map((toRecordId) => ({
+      tenantId,
+      fieldId,
+      fromRecordId,
+      toRecordId,
+      createdBy: actorId ?? null,
+    })),
+  );
+}

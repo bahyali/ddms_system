@@ -288,20 +288,28 @@ paths:
       tags:
         - Relations
       summary: 'List Relations'
-      description: 'Retrieves a list of relations, typically filtered by the source record and field.'
+      description: 'Retrieves relations for a record, optionally filtered by field and direction.'
       operationId: 'listRelations'
       parameters:
-        - name: from_record_id
+        - name: record_id
           in: query
           required: true
-          description: 'The ID of the source record to filter relations by.'
+          description: 'The record to use when searching for relations.'
           schema:
             type: string
             format: uuid
+        - name: role
+          in: query
+          required: false
+          description: 'Whether to return relations where the record is the source (`from`) or target (`to`).'
+          schema:
+            type: string
+            enum: [from, to]
+            default: from
         - name: field_id
           in: query
-          required: true
-          description: 'The ID of the relation field to filter relations by.'
+          required: false
+          description: 'If provided, limits results to a specific relation field.'
           schema:
             type: string
             format: uuid
@@ -313,7 +321,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Relation'
+                  $ref: '#/components/schemas/RelationWithContext'
         '400':
           $ref: '#/components/responses/BadRequest'
 
@@ -776,6 +784,56 @@ components:
         - from_record_id
         - to_record_id
         - createdAt
+
+    RelationWithContext:
+      allOf:
+        - $ref: '#/components/schemas/Relation'
+        - type: object
+          properties:
+            direction:
+              type: string
+              enum: [from, to]
+            field:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                key:
+                  type: string
+                label:
+                  type: string
+                entityTypeId:
+                  type: string
+                  format: uuid
+                targetEntityTypeId:
+                  type: string
+                  format: uuid
+                  nullable: true
+                cardinality:
+                  type: string
+                  enum: [one, many]
+                  nullable: true
+              required:
+                - id
+                - key
+                - label
+                - entityTypeId
+            relatedRecord:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                entityTypeId:
+                  type: string
+                  format: uuid
+                label:
+                  type: string
+                  nullable: true
+              required:
+                - id
+                - entityTypeId
 
     RelationCreate:
       type: object

@@ -111,10 +111,35 @@ export const FieldDefForm = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) => {
     const { name, value, type, checked } = e.target;
-    setFormState((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+
+    setFormState((prev) => {
+      const next: FormState = {
+        ...prev,
+      };
+
+      if (type === 'checkbox') {
+        next[name as keyof FormState] = checked as never;
+      } else if (type === 'radio') {
+        if (checked) {
+          next[name as keyof FormState] = value as never;
+        }
+      } else {
+        next[name as keyof FormState] = value as never;
+      }
+
+      if (name === 'kind') {
+        if (value === 'relation') {
+          if (!prev.relationTargetEntityTypeId && entityTypes?.length) {
+            next.relationTargetEntityTypeId = entityTypes[0]?.id;
+          }
+        } else if (prev.kind === 'relation') {
+          next.relationTargetEntityTypeId = undefined;
+          next.relationCardinality = 'one';
+        }
+      }
+
+      return next;
+    });
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
