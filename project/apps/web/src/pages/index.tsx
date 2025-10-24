@@ -18,6 +18,57 @@ const HomePage: NextPageWithLayout = () => {
     return entityTypes.slice(0, 3);
   }, [entityTypes]);
 
+  const stats = useMemo(() => {
+    const total = entityTypes?.length ?? 0;
+    const described =
+      entityTypes?.filter((entityType) => Boolean(entityType.description?.trim())).length ?? 0;
+    const undecorated = total - described;
+    return [
+      {
+        label: 'Entity types',
+        value: total,
+        helper: total === 1 ? 'structure in play' : 'structures live',
+      },
+      {
+        label: 'Documented',
+        value: described,
+        helper: described === 1 ? 'with context' : 'with descriptions',
+      },
+      {
+        label: 'Needs polish',
+        value: Math.max(undecorated, 0),
+        helper: 'add descriptions to guide teams',
+      },
+    ];
+  }, [entityTypes]);
+
+  const blueprint = useMemo(
+    () => [
+      {
+        stage: 'Configure',
+        heading: 'Model entity types',
+        body: 'Capture required fields, set ACLs, and give the team context with descriptions.',
+        href: '/admin/entity-types',
+        cta: 'Design schema',
+      },
+      {
+        stage: 'Populate',
+        heading: 'Create trusted records',
+        body: 'Guide teams through generated forms with validation and field-level hints.',
+        href: quickLinks[0] ? `/entities/${quickLinks[0].key}` : '/admin/entity-types',
+        cta: 'Open records',
+      },
+      {
+        stage: 'Govern',
+        heading: 'Link relationships',
+        body: 'Connect owners, dependencies, and integrations so downstream flows stay in sync.',
+        href: quickLinks[0] ? `/entities/${quickLinks[0].key}/new` : '/admin/entity-types',
+        cta: 'Plan relationships',
+      },
+    ],
+    [quickLinks],
+  );
+
   return (
     <>
       <Head>
@@ -28,69 +79,88 @@ const HomePage: NextPageWithLayout = () => {
         />
       </Head>
       <div className="stack">
-        <section className="hero">
-          <span className="badge">Discover</span>
-          <h1>Dynamic data, governed in real time</h1>
-          <p>
-            Spin up entity types, add fields with live validation, and empower teams to
-            create and relate records in minutes. Start with a guided template or jump
-            straight into your workspace.
-          </p>
-          <div className="row row-wrap">
+        <section className="hero hero--overview">
+          <div className="hero__heading">
+            <span className="badge">Discover</span>
+            <h1>Orchestrate your entity workspace</h1>
+            <p>
+              Stand up schemas, seed high-quality records, and keep relationships aligned. Use the
+              quick links below to jump back into the spots you touched most recently.
+            </p>
+          </div>
+          <ul className="hero-checklist">
+            <li>Blueprint each entity with required fields and descriptions.</li>
+            <li>Guide teams through record capture with validation-aware forms.</li>
+            <li>Keep relationships fresh with inline linking and audit trails.</li>
+          </ul>
+          <div className="hero-actions">
             <Link href="/admin/entity-types/new" className="button">
               Create entity type
             </Link>
             <Link href="/admin/entity-types" className="button secondary">
-              Customize fields
+              Manage schema
             </Link>
-          </div>
-          <div className="metadata-grid" style={{ marginTop: 'var(--space-4)' }}>
-            <div className="metadata-item">
-              <span className="label">North Star</span>
-              <span className="value">Fields in &lt; 2 minutes</span>
-            </div>
-            <div className="metadata-item">
-              <span className="label">Performance</span>
-              <span className="value">p95 search &lt; 500ms</span>
-            </div>
-            <div className="metadata-item">
-              <span className="label">Governance</span>
-              <span className="value">Role-aware ACLs</span>
-            </div>
           </div>
         </section>
 
-        <section className="stack">
-          <div className="row row-wrap" style={{ justifyContent: 'space-between' }}>
-            <h2 style={{ margin: 0 }}>Get moving fast</h2>
+        <section className="surface-card overview-summary">
+          <div className="overview-summary__header">
+            <h2>Health snapshot</h2>
             <span className="helper-text">
-              Follow the stage-by-stage blueprint from Configure → Govern
+              Track the shape of your workspace before diving into the details.
             </span>
           </div>
+          <div className="overview-summary__grid">
+            {stats.map((stat) => (
+              <div key={stat.label} className="overview-summary__card">
+                <span className="label">{stat.label}</span>
+                <span className="value">{stat.value}</span>
+                <span className="helper-text">{stat.helper}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
-          <div className="quick-actions">
-            <Link href="/admin/entity-types" className="quick-card">
-              <span className="badge">Build</span>
-              <h3>Model entity types</h3>
-              <p>
-                Create project, resource, or user templates and describe the fields that power
-                your workflows.
-              </p>
-            </Link>
-            <Link href="/entities/project" className="quick-card">
-              <span className="badge positive">Populate</span>
-              <h3>Create records</h3>
-              <p>
-                Use generated forms with inline validation to capture consistent data every time.
-              </p>
-            </Link>
-            <Link href="/entities/project/new" className="quick-card">
-              <span className="badge">Relate</span>
-              <h3>Link key relationships</h3>
-              <p>
-                Connect owners, resources, and dependencies; see them update instantly via live
-                events.
-              </p>
+        <section className="overview-grid">
+          <div className="surface-card overview-grid__column">
+            <div className="overview-grid__header">
+              <h2 style={{ margin: 0 }}>Get moving fast</h2>
+              <span className="helper-text">
+                Follow the Configure → Populate → Govern flow to keep momentum.
+              </span>
+            </div>
+            <div className="quick-actions">
+              {blueprint.map((item) => (
+                <Link key={item.stage} href={item.href} className="quick-card">
+                  <span className="badge">{item.stage}</span>
+                  <h3>{item.heading}</h3>
+                  <p>{item.body}</p>
+                  <span className="quick-card__cta">{item.cta}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="surface-card overview-grid__column">
+            <div className="overview-grid__header">
+              <h2 style={{ margin: 0 }}>Workspace tips</h2>
+              <span className="helper-text">
+                Keep velocity high and make the experience friendly for downstream teams.
+              </span>
+            </div>
+            <ul className="overview-tips">
+              <li>
+                Add plain-language descriptions to entity types so everyone understands how to use
+                them.
+              </li>
+              <li>
+                Mark frequently queried fields as searchable to unlock filters and saved views.
+              </li>
+              <li>
+                Review relationships after each import so cross-entity context stays reliable.
+              </li>
+            </ul>
+            <Link href="/admin/entity-types" className="button secondary" style={{ width: 'max-content' }}>
+              Review schema checklist
             </Link>
           </div>
         </section>

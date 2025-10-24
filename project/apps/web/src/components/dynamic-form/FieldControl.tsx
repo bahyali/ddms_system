@@ -1,4 +1,4 @@
-import type { ChangeEvent } from 'react';
+import { useMemo, useState, type ChangeEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { components } from '@ddms/sdk';
 import api from '~/lib/api';
@@ -136,36 +136,146 @@ type RelationOption = {
   label: string;
 };
 
-function useRelationOptions(entityTypeKey?: string) {
+function useRelationOptions(
+  entityTypeKey?: string,
+  entityTypeId?: string,
+  selectedIds: string[] = [],
+) {
   return useQuery<RelationOption[]>({
-    queryKey: ['relation-options', entityTypeKey],
+    queryKey: ['relation-options', entityTypeKey, [...selectedIds].sort().join(',')],
     enabled: Boolean(entityTypeKey),
     queryFn: async () => {
       if (!entityTypeKey) return [];
-      const { data, error } = await api.POST('/entities/{entityTypeKey}/search', {
-        params: { path: { entityTypeKey } },
-        body: { limit: 20 },
-      });
-      if (error || !data) {
-        return [];
+
+      const [fieldsResponse, recordsResponse] = await Promise.all([
+        entityTypeId
+          ? api.GET('/entity-types/{entityTypeId}/fields', {
+              params: { path: { entityTypeId } },
+            })
+          : Promise.resolve({ data: [] as components['schemas']['FieldDef'][] }),
+        api.POST('/entities/{entityTypeKey}/search', {
+          params: { path: { entityTypeKey } },
+          body: { limit: 50 },
+        }),
+      ]);
+
+      if (fieldsResponse.error) {
+        throw fieldsResponse.error;
+      }
+      if (recordsResponse.error) {
+        throw recordsResponse.error;
       }
 
-      return data.rows.map((record) => {
-        const rawData = record.data as Record<string, unknown> | undefined;
-        const labelCandidate = rawData
-          ? (['name', 'label', 'title']
-              .map((key) => rawData[key])
-              .find((val): val is string => typeof val === 'string' && val.length > 0) ?? null)
-          : null;
-        return {
-          id: record.id,
-          label: labelCandidate ?? record.id,
-        };
+      const fieldDefs = (fieldsResponse.data ?? []) as components['schemas']['FieldDef'][];
+      const records =
+        (recordsResponse.data?.rows as components['schemas']['Record'][] | undefined) ?? [];
+
+      const recordsById = new Map<string, components['schemas']['Record']>();
+      records.forEach((record) => {
+        recordsById.set(record.id, record);
       });
+
+      const missingSelectedIds = selectedIds.filter((id) => !recordsById.has(id));
+      if (missingSelectedIds.length > 0) {
+        const additionalRecords = await Promise.all(
+          missingSelectedIds.map(async (recordId) => {
+            const { data, error } = await api.GET('/entities/{entityTypeKey}/{recordId}', {
+              params: { path: { entityTypeKey, recordId } },
+            });
+            if (error || !data) {
+              return null;
+            }
+            return data as components['schemas']['Record'];
+          }),
+        );
+        additionalRecords
+          .filter((record): record is components['schemas']['Record'] => Boolean(record))
+          .forEach((record) => {
+            recordsById.set(record.id, record);
+          });
+      }
+
+      return Array.from(recordsById.values()).map((record) => ({
+        id: record.id,
+        label: deriveRelationLabel(record, fieldDefs),
+      }));
     },
   });
 }
 
+function deriveRelationLabel(
+  record: components['schemas']['Record'],
+  fieldDefs: components['schemas']['FieldDef'][],
+) {
+  if (typeof record.label === 'string' && record.label.trim().length > 0) {
+    return record.label;
+  }
+
+  const sortedFields = [...fieldDefs].sort(
+    (a, b) => (a.position ?? 0) - (b.position ?? 0),
+  );
+  const candidateFields = sortedFields.filter((field) => field.kind !== 'relation');
+
+  const data = (record.data ?? {}) as Record<string, unknown>;
+
+  const tryValue = (value: unknown): string | null => {
+    if (value === null || value === undefined) return null;
+    if (Array.isArray(value)) {
+      const normalized = value
+        .map((item) => {
+          if (typeof item === 'string') return item.trim();
+          if (typeof item === 'number' || typeof item === 'boolean') return String(item);
+          if (item && typeof item === 'object') {
+            const label = (item as { label?: unknown }).label;
+            if (typeof label === 'string' && label.trim().length > 0) {
+              return label.trim();
+            }
+            const name = (item as { name?: unknown }).name;
+            if (typeof name === 'string' && name.trim().length > 0) {
+              return name.trim();
+            }
+            const valueProperty = (item as { value?: unknown }).value;
+            if (typeof valueProperty === 'string' && valueProperty.trim().length > 0) {
+              return valueProperty.trim();
+            }
+          }
+          return null;
+        })
+        .filter((entry): entry is string => Boolean(entry && entry.length > 0));
+      if (normalized.length > 0) {
+        return normalized.join(', ');
+      }
+      return null;
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return String(value);
+    }
+    if (value && typeof value === 'object') {
+      const label = (value as { label?: unknown }).label;
+      if (typeof label === 'string' && label.trim().length > 0) {
+        return label.trim();
+      }
+      const name = (value as { name?: unknown }).name;
+      if (typeof name === 'string' && name.trim().length > 0) {
+        return name.trim();
+      }
+    }
+    return null;
+  };
+
+  for (const field of candidateFields) {
+    const maybeValue = tryValue(data[field.key]);
+    if (maybeValue) {
+      return maybeValue;
+    }
+  }
+
+  return record.id;
+}
 interface RelationPickerProps {
   fieldKey: string;
   fieldDef: FieldDef;
@@ -192,19 +302,87 @@ function RelationPicker({
     : undefined;
   const entityTypeKey = targetEntity?.key;
 
-  const { data: options = [] } = useRelationOptions(entityTypeKey);
+  const selectedIds = useMemo(() => {
+    if (relationOptions?.cardinality === 'many') {
+      if (Array.isArray(value)) {
+        return (value as unknown[])
+          .map((item) => (typeof item === 'string' ? item : null))
+          .filter((item): item is string => Boolean(item));
+      }
+      if (typeof value === 'string' && value.trim().length > 0) {
+        return [value.trim()];
+      }
+      return [];
+    }
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return [value.trim()];
+    }
+    return [];
+  }, [relationOptions?.cardinality, value]);
+
+  const { data: options = [], isLoading: isLoadingOptions } = useRelationOptions(
+    entityTypeKey,
+    targetEntityTypeId,
+    selectedIds,
+  );
+  const optionLookup = useMemo(
+    () => new Map(options.map((option) => [option.id, option])),
+    [options],
+  );
+  const [searchTerm, setSearchTerm] = useState('');
+  const normalizedSearch = useMemo(
+    () => searchTerm.trim().toLowerCase(),
+    [searchTerm],
+  );
+  const multiSelectedValues = useMemo(() => {
+    if (relationOptions?.cardinality === 'many') {
+      return selectedIds;
+    }
+    return [];
+  }, [relationOptions?.cardinality, selectedIds]);
+  const selectedDescriptors = useMemo(
+    () =>
+      multiSelectedValues.map((id) => ({
+        id,
+        label: optionLookup.get(id)?.label ?? id,
+      })),
+    [multiSelectedValues, optionLookup],
+  );
+  const filteredOptions = useMemo(() => {
+    if (relationOptions?.cardinality !== 'many') {
+      return options;
+    }
+    if (!normalizedSearch) {
+      return options;
+    }
+    const matches = options.filter((option) => {
+      const haystack = `${option.label} ${option.id}`.toLowerCase();
+      return haystack.includes(normalizedSearch);
+    });
+    const presentIds = new Set(matches.map((option) => option.id));
+    selectedDescriptors.forEach((descriptor) => {
+      if (!presentIds.has(descriptor.id)) {
+        const option = optionLookup.get(descriptor.id);
+        if (option) {
+          matches.unshift(option);
+          presentIds.add(option.id);
+        }
+      }
+    });
+    return matches;
+  }, [
+    normalizedSearch,
+    optionLookup,
+    options,
+    relationOptions?.cardinality,
+    selectedDescriptors,
+  ]);
 
   const helperText = targetEntity
     ? `Select or paste a ${targetEntity.label} record ID.`
     : 'Paste the related record UUID.';
 
   if (relationOptions?.cardinality === 'many') {
-    const selectedValues = Array.isArray(value)
-      ? (value as string[])
-      : typeof value === 'string' && value
-      ? [value]
-      : [];
-
     const handleMultiChange = (event: ChangeEvent<HTMLSelectElement>) => {
       const selected = Array.from(event.target.selectedOptions, (option) => option.value);
       onChange(selected);
@@ -212,23 +390,44 @@ function RelationPicker({
 
     return (
       <div className="stack-sm">
+        <input
+          type="search"
+          placeholder={targetEntity ? `Search ${targetEntity.label}` : 'Search records'}
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          aria-label="Filter relation options"
+        />
+        {isLoadingOptions && <span className="helper-text">Loading options…</span>}
         <select
           id={fieldKey}
           name={fieldKey}
           multiple
-          value={selectedValues}
+          value={multiSelectedValues}
           onChange={handleMultiChange}
           onBlur={onBlur}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${fieldKey}-error` : undefined}
-          style={{ minHeight: '120px' }}
+          aria-busy={isLoadingOptions}
+          style={{ minHeight: '140px' }}
         >
-          {options.map((option) => (
+          {filteredOptions.map((option) => (
             <option key={option.id} value={option.id}>
               {option.label}
             </option>
           ))}
         </select>
+        {filteredOptions.length === 0 && !isLoadingOptions && (
+          <span className="helper-text">No matches. Try another search or paste IDs below.</span>
+        )}
+        {selectedDescriptors.length > 0 && (
+          <div className="chip-group">
+            {selectedDescriptors.map((item) => (
+              <span key={item.id} className="chip">
+                {item.label}
+              </span>
+            ))}
+          </div>
+        )}
         <input
           type="text"
           placeholder="Add IDs separated by commas"
@@ -238,7 +437,7 @@ function RelationPicker({
               .map((item) => item.trim())
               .filter(Boolean);
             if (manualValues.length > 0) {
-              const merged = Array.from(new Set([...selectedValues, ...manualValues]));
+              const merged = Array.from(new Set([...multiSelectedValues, ...manualValues]));
               onChange(merged);
               event.target.value = '';
               onBlur();

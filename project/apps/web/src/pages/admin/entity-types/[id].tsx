@@ -64,20 +64,80 @@ const EntityTypeDetailPage: NextPageWithLayout = () => {
     ];
   }, [entityType]);
 
+  const fieldInsights = useMemo(() => {
+    if (!fieldDefs || fieldDefs.length === 0) {
+      return {
+        total: 0,
+        required: 0,
+        relations: 0,
+        searchable: 0,
+      };
+    }
+    return fieldDefs.reduce(
+      (accumulator, field) => {
+        accumulator.total += 1;
+        if (field.required) accumulator.required += 1;
+        if (field.kind === 'relation') accumulator.relations += 1;
+        if (field.searchable) accumulator.searchable += 1;
+        return accumulator;
+      },
+      {
+        total: 0,
+        required: 0,
+        relations: 0,
+        searchable: 0,
+      },
+    );
+  }, [fieldDefs]);
+
+  const schemaGuidance = useMemo(() => {
+    const recommendations: { label: string; tone: 'info' | 'warning'; detail: string }[] = [];
+    if (entityType && !entityType.description) {
+      recommendations.push({
+        label: 'Add an overview',
+        tone: 'warning',
+        detail: 'Describe how this entity should be used so downstream teams have context.',
+      });
+    }
+    if (fieldInsights.total === 0) {
+      recommendations.push({
+        label: 'Add your first field',
+        tone: 'warning',
+        detail: 'Start with a primary label or identifier so records return useful display values.',
+      });
+    } else {
+      if (fieldInsights.required === 0) {
+        recommendations.push({
+          label: 'Mark critical fields required',
+          tone: 'info',
+          detail: 'Guarantee core data is captured before records are saved.',
+        });
+      }
+      if (fieldInsights.searchable === 0) {
+        recommendations.push({
+          label: 'Enable searchability',
+          tone: 'info',
+          detail: 'Mark high-signal fields as searchable to power table filters and saved views.',
+        });
+      }
+    }
+    return recommendations;
+  }, [entityType, fieldInsights]);
+
   const handleOpenFormForCreate = () => {
     setSelectedField(null);
     setFormOpen(true);
   };
 
   const handleOpenFormForEdit = (field: FieldDef) => {
-      setSelectedField(field);
-      setFormOpen(true);
-    };
+    setSelectedField(field);
+    setFormOpen(true);
+  };
 
-    const handleCloseForm = () => {
-      setFormOpen(false);
-      setSelectedField(null);
-    };
+  const handleCloseForm = () => {
+    setFormOpen(false);
+    setSelectedField(null);
+  };
 
   const handleSubmit = (data: FieldDefCreate | FieldDefUpdate) => {
     if (selectedField) {
@@ -128,123 +188,168 @@ const EntityTypeDetailPage: NextPageWithLayout = () => {
 
         {entityType && (
           <>
-            <section className="surface-card">
-              <div className="row row-wrap" style={{ justifyContent: 'space-between' }}>
-                <div className="stack-sm">
-                  <h2 style={{ margin: 0 }}>{entityType.label}</h2>
-                  <p className="helper-text">
-                    Iterate safely—changes sync to dynamic forms and validation in real time.
-                  </p>
+            <section className="surface-card entity-type-header">
+              <div className="entity-type-header__intro">
+                <span className="badge">Entity Type</span>
+                <h2>{entityType.label}</h2>
+                <p className="helper-text">
+                  Iterate safely—changes sync to generated forms and validation in real time.
+                </p>
+                <div className="metadata-grid entity-type-header__meta">
+                  {overviewCards.map((card) => (
+                    <div className="metadata-item" key={card.label}>
+                      <span className="label">{card.label}</span>
+                      <span className="value">{card.value}</span>
+                    </div>
+                  ))}
                 </div>
+                {entityType.description && (
+                  <p className="entity-type-header__description">{entityType.description}</p>
+                )}
+              </div>
+              <div className="entity-type-header__actions">
+                <Link
+                  href={entityType ? `/entities/${entityType.key}` : '#'}
+                  className="button secondary"
+                >
+                  View records
+                </Link>
                 <Link
                   href={`/admin/entity-types/${entityTypeId}/edit`}
                   className="button secondary"
                 >
                   Edit details
                 </Link>
+                <button type="button" className="button" onClick={handleOpenFormForCreate}>
+                  Add field
+                </button>
               </div>
-
-              <div className="metadata-grid" style={{ marginTop: 'var(--space-4)' }}>
-                {overviewCards.map((card) => (
-                  <div className="metadata-item" key={card.label}>
-                    <span className="label">{card.label}</span>
-                    <span className="value">{card.value}</span>
-                  </div>
-                ))}
-              </div>
-
-              {entityType.description && (
-                <p style={{ marginTop: 'var(--space-4)', color: 'var(--text-muted)' }}>
-                  {entityType.description}
-                </p>
-              )}
             </section>
 
-            <section className="stack">
-              <div className="tab-list">
-                <button
-                  type="button"
-                  className={`tab-button${activeTab === 'fields' ? ' is-active' : ''}`}
-                  onClick={() => setActiveTab('fields')}
-                >
-                  Fields
-                </button>
-                <button
-                  type="button"
-                  className={`tab-button${activeTab === 'permissions' ? ' is-active' : ''}`}
-                  onClick={() => setActiveTab('permissions')}
-                >
-                  Permissions
-                </button>
-                <button
-                  type="button"
-                  className={`tab-button${activeTab === 'schema' ? ' is-active' : ''}`}
-                  onClick={() => setActiveTab('schema')}
-                >
-                  JSON Schema
-                </button>
-              </div>
+            <div className="entity-type-layout">
+              <div className="entity-type-main stack">
+                <div className="tab-list">
+                  <button
+                    type="button"
+                    className={`tab-button${activeTab === 'fields' ? ' is-active' : ''}`}
+                    onClick={() => setActiveTab('fields')}
+                  >
+                    Fields
+                  </button>
+                  <button
+                    type="button"
+                    className={`tab-button${activeTab === 'permissions' ? ' is-active' : ''}`}
+                    onClick={() => setActiveTab('permissions')}
+                  >
+                    Permissions
+                  </button>
+                  <button
+                    type="button"
+                    className={`tab-button${activeTab === 'schema' ? ' is-active' : ''}`}
+                    onClick={() => setActiveTab('schema')}
+                  >
+                    JSON Schema
+                  </button>
+                </div>
 
-              <div className="tab-panels">
-                {activeTab === 'fields' && (
-                  <div className="surface-card stack">
-                    <div className="row row-wrap" style={{ justifyContent: 'space-between' }}>
-                      <div className="stack-sm">
-                        <h3 style={{ margin: 0 }}>Fields</h3>
-                        <p className="helper-text">
-                          Add data points, change validation rules, or toggle indexing to
-                          improve lookups.
-                        </p>
+                <div className="tab-panels stack">
+                  {activeTab === 'fields' && (
+                    <div className="surface-card stack">
+                      <div className="row row-wrap" style={{ justifyContent: 'space-between' }}>
+                        <div className="stack-sm">
+                          <h3 style={{ margin: 0 }}>Fields</h3>
+                          <p className="helper-text">
+                            Add data points, change validation rules, or toggle indexing to improve lookups.
+                          </p>
+                        </div>
+                        <button type="button" className="button secondary" onClick={handleOpenFormForCreate}>
+                          New field
+                        </button>
                       </div>
-                      <button type="button" onClick={handleOpenFormForCreate}>
-                        Add field
-                      </button>
+
+                      {isLoadingFieldDefs && <p className="helper-text">Loading fields…</p>}
+                      {isFieldDefsError && (
+                        <p className="error">Error: {fieldDefsError.message}</p>
+                      )}
+                      {fieldDefs && (
+                        <FieldDefList
+                          fieldDefs={fieldDefs}
+                          onEditField={handleOpenFormForEdit}
+                          onCreateField={handleOpenFormForCreate}
+                          onDeleteField={(field) => setFieldPendingDeletion(field)}
+                        />
+                      )}
+                      {mutationError && (
+                        <p className="error">Error saving field: {mutationError.message}</p>
+                      )}
+                      {deletionError && (
+                        <p className="error">Error deleting field: {deletionError.message}</p>
+                      )}
                     </div>
+                  )}
 
-                    {isLoadingFieldDefs && <p className="helper-text">Loading fields…</p>}
-                    {isFieldDefsError && (
-                      <p className="error">Error: {fieldDefsError.message}</p>
-                    )}
-                    {fieldDefs && (
-                      <FieldDefList
-                        fieldDefs={fieldDefs}
-                        onEditField={handleOpenFormForEdit}
-                        onCreateField={handleOpenFormForCreate}
-                        onDeleteField={(field) => setFieldPendingDeletion(field)}
-                      />
-                    )}
-                    {mutationError && (
-                      <p className="error">Error saving field: {mutationError.message}</p>
-                    )}
-                    {deletionError && (
-                      <p className="error">Error deleting field: {deletionError.message}</p>
-                    )}
-                  </div>
-                )}
+                  {activeTab === 'permissions' && (
+                    <div className="surface-card surface-card--muted stack">
+                      <h3 style={{ margin: 0 }}>Permissions</h3>
+                      <p className="helper-text">
+                        Role-aware access controls are being wired up. Soon you&rsquo;ll assign read/write access per field and role from here.
+                      </p>
+                      <span className="badge warning">In design</span>
+                    </div>
+                  )}
 
-                {activeTab === 'permissions' && (
-                  <div className="surface-card surface-card--muted stack">
-                    <h3 style={{ margin: 0 }}>Permissions</h3>
-                    <p className="helper-text">
-                      Role-aware access controls are being wired up. Soon you&rsquo;ll assign
-                      read/write access per field and role from here.
-                    </p>
-                    <span className="badge warning">In design</span>
-                  </div>
-                )}
-
-                {activeTab === 'schema' && (
-                  <div className="surface-card surface-card--muted stack">
-                    <h3 style={{ margin: 0 }}>JSON Schema</h3>
-                    <p className="helper-text">
-                      Export OpenAPI + JSON Schema representations once generated. They unlock
-                      SDK scaffolding and contract testing.
-                    </p>
-                    <span className="badge">Coming soon</span>
-                  </div>
-                )}
+                  {activeTab === 'schema' && (
+                    <div className="surface-card surface-card--muted stack">
+                      <h3 style={{ margin: 0 }}>JSON Schema</h3>
+                      <p className="helper-text">
+                        Export OpenAPI + JSON Schema representations once generated. They unlock SDK scaffolding and contract testing.
+                      </p>
+                      <span className="badge">Coming soon</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </section>
+
+              <aside className="entity-type-aside stack-sm">
+                <section className="surface-card surface-card--muted stack-sm">
+                  <h3 style={{ margin: 0 }}>Schema summary</h3>
+                  <div className="insight-grid">
+                    <div className="insight-card">
+                      <span className="label">Total fields</span>
+                      <span className="value">{fieldInsights.total}</span>
+                      <span className="helper-text">
+                        {fieldInsights.required} required · {fieldInsights.searchable} searchable
+                      </span>
+                    </div>
+                    <div className="insight-card">
+                      <span className="label">Relations</span>
+                      <span className="value">{fieldInsights.relations}</span>
+                      <span className="helper-text">
+                        Connect records across entity types to power rollups.
+                      </span>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="surface-card surface-card--muted stack-sm">
+                  <h3 style={{ margin: 0 }}>Next best actions</h3>
+                  {schemaGuidance.length === 0 ? (
+                    <p className="helper-text">
+                      Looking solid! Keep an eye on validation and relations as your model grows.
+                    </p>
+                  ) : (
+                    <ul className="callout-list">
+                      {schemaGuidance.map((item) => (
+                        <li key={item.label} className={`callout callout--${item.tone}`}>
+                          <strong>{item.label}</strong>
+                          <span>{item.detail}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              </aside>
+            </div>
           </>
         )}
       </div>
