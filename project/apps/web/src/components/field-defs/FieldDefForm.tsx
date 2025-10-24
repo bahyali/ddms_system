@@ -10,6 +10,7 @@ interface FormState {
   label: string;
   kind: FieldDefCreate['kind'];
   required: boolean;
+  indexed: boolean;
   minLen?: number;
   maxLen?: number;
   regex?: string;
@@ -38,6 +39,7 @@ const INITIAL_FORM_STATE: FormState = {
   label: '',
   kind: 'text',
   required: false,
+  indexed: false,
   minLen: undefined,
   maxLen: undefined,
   regex: '',
@@ -79,6 +81,7 @@ export const FieldDefForm = ({
         label: initialData.label,
         kind: initialData.kind,
         required: initialData.required ?? false,
+        indexed: initialData.indexed ?? false,
         minLen: initialData.validate?.text?.minLen,
         maxLen: initialData.validate?.text?.maxLen,
         regex: initialData.validate?.text?.regex,
@@ -156,6 +159,7 @@ export const FieldDefForm = ({
     const payload: Partial<FieldDefCreate | FieldDefUpdate> = {
       label: formState.label,
       required: formState.required,
+      indexed: formState.indexed,
     };
 
     if (!isEditMode) {
@@ -364,7 +368,7 @@ export const FieldDefForm = ({
           </div>
 
           <div className="field-group">
-            <label htmlFor="kind">Kind</label>
+          <label htmlFor="kind">Kind</label>
             <select
               id="kind"
               name="kind"
@@ -391,6 +395,15 @@ export const FieldDefForm = ({
               onChange={handleChange}
             />
             <span className="helper-text">Mark as required for contributors</span>
+          </label>
+          <label className="row" style={{ justifyContent: 'flex-start' }}>
+            <input
+              name="indexed"
+              type="checkbox"
+              checked={formState.indexed}
+              onChange={handleChange}
+            />
+            <span className="helper-text">Enable indexing to accelerate search queries</span>
           </label>
 
           {renderKindSpecificFields()}
