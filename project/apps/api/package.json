@@ -10,10 +10,10 @@
     "test": "tsx --test src/**/*.test.ts"
   },
   "dependencies": {
-    "@faker-js/faker": "^9.0.0",
     "@ddms/core": "workspace:*",
     "@ddms/db": "workspace:*",
     "@ddms/sdk": "workspace:*",
+    "@faker-js/faker": "^9.0.0",
     "@fastify/cors": "^9.0.1",
     "@fastify/jwt": "^8.0.1",
     "dotenv": "^16.4.5",

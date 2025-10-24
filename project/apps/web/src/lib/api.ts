@@ -14,19 +14,19 @@ const devJwt =
   process.env.NEXT_PUBLIC_DEV_JWT ??
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZXYtdXNlciIsInJvbGVzIjpbImFkbWluIl0sInRlbmFudF9pZCI6IjExMTExMTExLTExMTEtMTExMS0xMTExLTExMTExMTExMTExMSJ9.6HPdCV5lI1DUoGLrQa4u0pgdOZW86CPZta6s5Z7ZPBk';
 
-const defaultHeaders: Record<string, string> = {};
+export const apiDefaultHeaders: Record<string, string> = {};
 if (devTenantId) {
-  defaultHeaders['x-tenant-id'] = devTenantId;
+  apiDefaultHeaders['x-tenant-id'] = devTenantId;
 }
 if (devJwt) {
-  defaultHeaders.Authorization = `Bearer ${devJwt}`;
+  apiDefaultHeaders.Authorization = `Bearer ${devJwt}`;
 }
 
 const api = createClient<paths>({
   baseUrl: apiBaseUrl,
-  headers: () => ({
-    ...defaultHeaders,
-  }),
+  headers: {
+    ...apiDefaultHeaders,
+  },
 });
 
 export default api;
