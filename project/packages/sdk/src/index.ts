@@ -72,7 +72,7 @@ export interface paths {
   "/relations": {
     /**
      * List Relations
-     * @description Retrieves a list of relations, typically filtered by the source record and field.
+     * @description Retrieves relations for a record, optionally filtered by field and direction.
      */
     get: operations["listRelations"];
     /**
@@ -279,9 +279,11 @@ export interface components {
       /** @description The current version of the record being updated, for optimistic locking. */
       version: number;
     };
+    /** @enum {string} */
     ActivityCategory: "schema" | "record" | "governance" | "import" | "integration";
     AuditLogEvent: {
       id: number;
+      /** Format: date-time */
       occurredAt: string;
       action: string;
       category: components["schemas"]["ActivityCategory"];
@@ -298,7 +300,8 @@ export interface components {
       schemaEdits: number;
       recordUpdates: number;
       uniqueActors: number;
-      lastEventAt?: string | null;
+      /** Format: date-time */
+      lastEventAt: string | null;
     };
     ActivityLogResponse: {
       events: components["schemas"]["AuditLogEvent"][];
@@ -327,22 +330,10 @@ export interface components {
       /** Format: date-time */
       createdAt: string;
     };
-    RelationWithContext: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      field_id: string;
-      /** Format: uuid */
-      from_record_id: string;
-      /** Format: uuid */
-      to_record_id: string;
-      /** Format: uuid */
-      createdBy?: string | null;
-      /** Format: date-time */
-      createdAt: string;
+    RelationWithContext: components["schemas"]["Relation"] & ({
       /** @enum {string} */
-      direction: "from" | "to";
-      field: {
+      direction?: "from" | "to";
+      field?: {
         /** Format: uuid */
         id: string;
         key: string;
@@ -351,17 +342,17 @@ export interface components {
         entityTypeId: string;
         /** Format: uuid */
         targetEntityTypeId?: string | null;
-        /** @enum {string} */
+        /** @enum {string|null} */
         cardinality?: "one" | "many" | null;
       };
-      relatedRecord: {
+      relatedRecord?: {
         /** Format: uuid */
         id: string;
         /** Format: uuid */
         entityTypeId: string;
         label?: string | null;
       };
-    };
+    });
     RelationCreate: {
       /**
        * Format: uuid
@@ -879,9 +870,13 @@ export interface operations {
   listActivityLog: {
     parameters: {
       query?: {
+        /** @description Maximum number of events to return. */
         limit?: number;
+        /** @description Cursor for pagination, representing the last event identifier. */
         cursor?: string;
+        /** @description Filter events by category. */
         type?: components["schemas"]["ActivityCategory"];
+        /** @description Search across action, resource, actor, and metadata. */
         search?: string;
       };
     };
