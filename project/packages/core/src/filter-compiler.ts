@@ -93,8 +93,13 @@ function processNode(node: Filter, paramIndex: number): ProcessedNode {
     case 'lt':
     case 'lte': {
       const sqlOp = OPERATOR_MAP[node.op];
+      const isNumeric = typeof node.value === 'number';
+      const fieldAccessor = isNumeric
+        ? `CAST(data->>'${node.field}' AS float8)`
+        : `data->>'${node.field}'`;
+
       return {
-        sql: `(data->>'${node.field}') ${sqlOp} $${paramIndex}`,
+        sql: `(${fieldAccessor}) ${sqlOp} $${paramIndex}`,
         params: [node.value],
         nextParamIndex: paramIndex + 1,
       };
