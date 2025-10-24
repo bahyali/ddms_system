@@ -18,9 +18,7 @@ import indexesRoutes from './routes/indexes';
 import auditRoutes from './routes/audit';
 import { tenants } from '@ddms/db';
 
-const isMockAuthEnabled =
-  process.env.MOCK_AUTH === 'true' ||
-  (process.env.MOCK_AUTH !== 'false' && process.env.NODE_ENV !== 'production');
+const isMockAuthEnabled = true;
 const mockTenantId =
   process.env.MOCK_TENANT_ID ?? '11111111-1111-1111-1111-111111111111';
 const mockUserId =
@@ -55,19 +53,19 @@ export async function buildServer() {
   await server.register(authPlugin);
   await server.register(indexerPlugin);
 
-  if (isMockAuthEnabled) {
-    try {
-      await server.db
-        .insert(tenants)
-        .values({
-          id: mockTenantId,
-          name: mockTenantName,
-        })
-        .onConflictDoNothing({ target: tenants.id });
-    } catch (err) {
-      server.log.error(err, 'Failed to ensure mock tenant exists');
-    }
-  }
+  // if (isMockAuthEnabled) {
+  //   try {
+  //     await server.db
+  //       .insert(tenants)
+  //       .values({
+  //         id: mockTenantId,
+  //         name: mockTenantName,
+  //       })
+  //       .onConflictDoNothing({ target: tenants.id });
+  //   } catch (err) {
+  //     server.log.error(err, 'Failed to ensure mock tenant exists');
+  //   }
+  // }
 
   // Global authentication hook
   server.addHook('preValidation', async (request, reply) => {
