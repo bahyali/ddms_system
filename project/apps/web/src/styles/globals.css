@@ -869,24 +869,6 @@ textarea {
   width: min(220px, 100%);
 }
 
-.entity-type-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: var(--space-4);
-}
-
-.entity-type-main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.entity-type-aside {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
 .insight-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1148,10 +1130,6 @@ textarea {
 
   .page-body:not(.page-body--single) .page-aside {
     order: -1;
-  }
-
-  .entity-type-layout {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .entity-type-header__actions {

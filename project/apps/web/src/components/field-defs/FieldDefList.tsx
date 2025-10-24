@@ -71,9 +71,9 @@ export const FieldDefList = ({
             <th>Kind</th>
             <th>Required</th>
             <th>Indexed</th>
-            <th>ACL</th>
-            <th>Options</th>
-            <th>Actions</th>
+            <th style={{ minWidth: '140px' }}>ACL</th>
+            <th style={{ minWidth: '180px' }}>Options</th>
+            <th style={{ minWidth: '220px' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -142,7 +142,7 @@ export const FieldDefList = ({
                 )}
               </td>
               <td>
-                <div className="row row-wrap">
+                <div className="row row-wrap" style={{ gap: 'var(--space-2)' }}>
                   <button
                     type="button"
                     className="button secondary"
@@ -159,9 +159,6 @@ export const FieldDefList = ({
                       Delete
                     </button>
                   )}
-                  <button type="button" className="button secondary" disabled>
-                    Dependencies
-                  </button>
                 </div>
               </td>
             </tr>

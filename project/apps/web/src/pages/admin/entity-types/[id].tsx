@@ -28,7 +28,6 @@ const EntityTypeDetailPage: NextPageWithLayout = () => {
 
   const [isFormOpen, setFormOpen] = useState(false);
   const [selectedField, setSelectedField] = useState<FieldDef | null>(null);
-  const [activeTab, setActiveTab] = useState<'fields' | 'permissions' | 'schema'>('fields');
 
   const {
     data: entityType,
@@ -226,129 +225,77 @@ const EntityTypeDetailPage: NextPageWithLayout = () => {
               </div>
             </section>
 
-            <div className="entity-type-layout">
-              <div className="entity-type-main stack">
-                <div className="tab-list">
-                  <button
-                    type="button"
-                    className={`tab-button${activeTab === 'fields' ? ' is-active' : ''}`}
-                    onClick={() => setActiveTab('fields')}
-                  >
-                    Fields
-                  </button>
-                  <button
-                    type="button"
-                    className={`tab-button${activeTab === 'permissions' ? ' is-active' : ''}`}
-                    onClick={() => setActiveTab('permissions')}
-                  >
-                    Permissions
-                  </button>
-                  <button
-                    type="button"
-                    className={`tab-button${activeTab === 'schema' ? ' is-active' : ''}`}
-                    onClick={() => setActiveTab('schema')}
-                  >
-                    JSON Schema
-                  </button>
-                </div>
-
-                <div className="tab-panels stack">
-                  {activeTab === 'fields' && (
-                    <div className="surface-card stack">
-                      <div className="row row-wrap" style={{ justifyContent: 'space-between' }}>
-                        <div className="stack-sm">
-                          <h3 style={{ margin: 0 }}>Fields</h3>
-                          <p className="helper-text">
-                            Add data points, change validation rules, or toggle indexing to improve lookups.
-                          </p>
-                        </div>
-                        <button type="button" className="button secondary" onClick={handleOpenFormForCreate}>
-                          New field
-                        </button>
-                      </div>
-
-                      {isLoadingFieldDefs && <p className="helper-text">Loading fields…</p>}
-                      {isFieldDefsError && (
-                        <p className="error">Error: {fieldDefsError.message}</p>
-                      )}
-                      {fieldDefs && (
-                        <FieldDefList
-                          fieldDefs={fieldDefs}
-                          onEditField={handleOpenFormForEdit}
-                          onCreateField={handleOpenFormForCreate}
-                          onDeleteField={(field) => setFieldPendingDeletion(field)}
-                        />
-                      )}
-                      {mutationError && (
-                        <p className="error">Error saving field: {mutationError.message}</p>
-                      )}
-                      {deletionError && (
-                        <p className="error">Error deleting field: {deletionError.message}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {activeTab === 'permissions' && (
-                    <div className="surface-card surface-card--muted stack">
-                      <h3 style={{ margin: 0 }}>Permissions</h3>
-                      <p className="helper-text">
-                        Role-aware access controls are being wired up. Soon you&rsquo;ll assign read/write access per field and role from here.
-                      </p>
-                      <span className="badge warning">In design</span>
-                    </div>
-                  )}
-
-                  {activeTab === 'schema' && (
-                    <div className="surface-card surface-card--muted stack">
-                      <h3 style={{ margin: 0 }}>JSON Schema</h3>
-                      <p className="helper-text">
-                        Export OpenAPI + JSON Schema representations once generated. They unlock SDK scaffolding and contract testing.
-                      </p>
-                      <span className="badge">Coming soon</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <aside className="entity-type-aside stack-sm">
-                <section className="surface-card surface-card--muted stack-sm">
-                  <h3 style={{ margin: 0 }}>Schema summary</h3>
-                  <div className="insight-grid">
-                    <div className="insight-card">
-                      <span className="label">Total fields</span>
-                      <span className="value">{fieldInsights.total}</span>
-                      <span className="helper-text">
-                        {fieldInsights.required} required · {fieldInsights.searchable} searchable
-                      </span>
-                    </div>
-                    <div className="insight-card">
-                      <span className="label">Relations</span>
-                      <span className="value">{fieldInsights.relations}</span>
-                      <span className="helper-text">
-                        Connect records across entity types to power rollups.
-                      </span>
-                    </div>
+            <div className="stack">
+              <section className="surface-card surface-card--muted stack-sm">
+                <h3 style={{ margin: 0 }}>Schema summary</h3>
+                <div className="insight-grid">
+                  <div className="insight-card">
+                    <span className="label">Total fields</span>
+                    <span className="value">{fieldInsights.total}</span>
+                    <span className="helper-text">
+                      {fieldInsights.required} required · {fieldInsights.searchable} searchable
+                    </span>
                   </div>
-                </section>
+                  <div className="insight-card">
+                    <span className="label">Relations</span>
+                    <span className="value">{fieldInsights.relations}</span>
+                    <span className="helper-text">
+                      Connect records across entity types to power rollups.
+                    </span>
+                  </div>
+                </div>
+              </section>
 
-                <section className="surface-card surface-card--muted stack-sm">
-                  <h3 style={{ margin: 0 }}>Next best actions</h3>
-                  {schemaGuidance.length === 0 ? (
+              <section className="surface-card stack">
+                <div className="row row-wrap" style={{ justifyContent: 'space-between' }}>
+                  <div className="stack-sm">
+                    <h3 style={{ margin: 0 }}>Fields</h3>
                     <p className="helper-text">
-                      Looking solid! Keep an eye on validation and relations as your model grows.
+                      Add data points, change validation rules, or toggle indexing to improve lookups.
                     </p>
-                  ) : (
-                    <ul className="callout-list">
-                      {schemaGuidance.map((item) => (
-                        <li key={item.label} className={`callout callout--${item.tone}`}>
-                          <strong>{item.label}</strong>
-                          <span>{item.detail}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
-              </aside>
+                  </div>
+                  <button type="button" className="button secondary" onClick={handleOpenFormForCreate}>
+                    New field
+                  </button>
+                </div>
+
+                {isLoadingFieldDefs && <p className="helper-text">Loading fields…</p>}
+                {isFieldDefsError && (
+                  <p className="error">Error: {fieldDefsError.message}</p>
+                )}
+                {fieldDefs && (
+                  <FieldDefList
+                    fieldDefs={fieldDefs}
+                    onEditField={handleOpenFormForEdit}
+                    onCreateField={handleOpenFormForCreate}
+                    onDeleteField={(field) => setFieldPendingDeletion(field)}
+                  />
+                )}
+                {mutationError && (
+                  <p className="error">Error saving field: {mutationError.message}</p>
+                )}
+                {deletionError && (
+                  <p className="error">Error deleting field: {deletionError.message}</p>
+                )}
+              </section>
+
+              <section className="surface-card surface-card--muted stack-sm">
+                <h3 style={{ margin: 0 }}>Next best actions</h3>
+                {schemaGuidance.length === 0 ? (
+                  <p className="helper-text">
+                    Looking solid! Keep an eye on validation and relations as your model grows.
+                  </p>
+                ) : (
+                  <ul className="callout-list">
+                    {schemaGuidance.map((item) => (
+                      <li key={item.label} className={`callout callout--${item.tone}`}>
+                        <strong>{item.label}</strong>
+                        <span>{item.detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             </div>
           </>
         )}
