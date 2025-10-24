@@ -17,6 +17,22 @@ interface FilterRule {
   value: string;
 }
 
+const generateRuleId = () => {
+  if (typeof crypto !== 'undefined') {
+    if (typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    if (typeof crypto.getRandomValues === 'function') {
+      const buffer = new Uint32Array(4);
+      crypto.getRandomValues(buffer);
+      return Array.from(buffer, (value) =>
+        value.toString(16).padStart(8, '0'),
+      ).join('-');
+    }
+  }
+  return `rule-${Math.random().toString(36).slice(2, 10)}`;
+};
+
 const OPERATORS_BY_KIND: Record<
   NonNullable<FieldKind>,
   { value: string; label: string }[]
@@ -67,7 +83,7 @@ export function FilterBuilder({
     setRules([
       ...rules,
       {
-        id: crypto.randomUUID(),
+        id: generateRuleId(),
         fieldKey: fieldDefs[0]?.key || '',
         operator: '',
         value: '',
