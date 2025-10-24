@@ -318,7 +318,7 @@ function describeAuditEvent(event: ApiEvent) {
 
   const entityTypeKey = getString(meta, 'entityTypeKey') ?? getString(meta, 'key');
   const changedKeys = getStringArray(meta, 'changedKeys');
-  const changeKeys = getChangeKeys(meta);
+  const changeEntries = extractChangeEntries(meta, changedKeys);
   const dataKeys = getStringArray(meta, 'dataKeys');
 
   switch (event.action) {
@@ -334,13 +334,14 @@ function describeAuditEvent(event: ApiEvent) {
       };
     }
     case 'entity_type.updated': {
-      const keys = changeKeys.length > 0 ? changeKeys : changedKeys;
-      keys.forEach((key) => tags.push(`updated:${key}`));
+      changeEntries.forEach((entry) => {
+        tags.push(entry.value ? `${entry.key}: ${entry.value}` : `updated:${entry.key}`);
+      });
       return {
         summary: 'Updated entity type',
         description:
-          keys.length > 0
-            ? `Changed ${keys.join(', ')}`
+          changeEntries.length > 0
+            ? summarizeChanges(changeEntries)
             : 'No fields provided.',
         entityLabel: entityTypeKey,
         tags,
@@ -352,7 +353,7 @@ function describeAuditEvent(event: ApiEvent) {
         tags.push(key);
       }
       if (meta.indexed === true) {
-        tags.push('indexed');
+        tags.push('indexed:true');
       }
       return {
         summary: 'Added field definition',
@@ -362,13 +363,14 @@ function describeAuditEvent(event: ApiEvent) {
       };
     }
     case 'field_def.updated': {
-      const keys = changeKeys.length > 0 ? changeKeys : changedKeys;
-      keys.forEach((key) => tags.push(`updated:${key}`));
+      changeEntries.forEach((entry) => {
+        tags.push(entry.value ? `${entry.key}: ${entry.value}` : `updated:${entry.key}`);
+      });
       return {
         summary: 'Updated field definition',
         description:
-          keys.length > 0
-            ? `Changed ${keys.join(', ')}`
+          changeEntries.length > 0
+            ? summarizeChanges(changeEntries)
             : 'No fields provided.',
         entityLabel: entityTypeKey,
         tags,
@@ -398,12 +400,15 @@ function describeAuditEvent(event: ApiEvent) {
       };
     }
     case 'record.updated': {
-      changedKeys.slice(0, 5).forEach((key) => tags.push(`updated:${key}`));
+      const entries = changeEntries.length > 0 ? changeEntries : changedKeys.map((key) => ({ key, value: null }));
+      entries.slice(0, 5).forEach((entry) => {
+        tags.push(entry.value ? `${entry.key}: ${entry.value}` : `updated:${entry.key}`);
+      });
       return {
         summary: 'Updated record',
         description:
-          changedKeys.length > 0
-            ? `Edited ${changedKeys.join(', ')}`
+          entries.length > 0
+            ? `Edited ${summarizeChanges(entries)}`
             : undefined,
         entityLabel: entityTypeKey,
         recordId: event.resourceId ?? undefined,
@@ -452,6 +457,8 @@ function getString(meta: Record<string, unknown>, key: string): string | undefin
   return undefined;
 }
 
+type ChangeEntry = { key: string; value: string | null };
+
 function getStringArray(meta: Record<string, unknown>, key: string): string[] {
   const value = meta[key];
   if (Array.isArray(value)) {
@@ -462,12 +469,58 @@ function getStringArray(meta: Record<string, unknown>, key: string): string[] {
   return [];
 }
 
-function getChangeKeys(meta: Record<string, unknown>): string[] {
-  const value = meta.changes;
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
-    return Object.keys(value as Record<string, unknown>);
+function extractChangeEntries(meta: Record<string, unknown>, fallbackKeys: string[]): ChangeEntry[] {
+  const raw = meta.changes;
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    const changes = raw as Record<string, unknown>;
+    const entries = Object.entries(changes).map(([key, value]) => ({
+      key,
+      value: formatChangeValue(value),
+    }));
+    if (entries.length > 0) {
+      return entries;
+    }
   }
-  return [];
+  return fallbackKeys.map((key) => ({ key, value: null }));
+}
+
+function summarizeChanges(entries: ChangeEntry[]): string {
+  if (entries.length === 0) return '';
+  const parts = entries
+    .map((entry) => (entry.value ? `${entry.key} → ${entry.value}` : entry.key))
+    .slice(0, 4);
+  const summary = parts.join(', ');
+  return entries.length > parts.length ? `${summary}, …` : summary;
+}
+
+function formatChangeValue(value: unknown): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === 'string') {
+    return value.length > 40 ? `${value.slice(0, 37)}…` : value;
+  }
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? String(value) : null;
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'true' : 'false';
+  }
+  if (Array.isArray(value)) {
+    const items = value
+      .map((item) => formatChangeValue(item))
+      .filter((item): item is string => Boolean(item));
+    if (items.length === 0) {
+      return `${value.length} items`;
+    }
+    const joined = items.join(', ');
+    return joined.length > 40 ? `${joined.slice(0, 37)}…` : joined;
+  }
+  if (typeof value === 'object') {
+    const json = JSON.stringify(value);
+    return json.length > 50 ? `${json.slice(0, 47)}…` : json;
+  }
+  return null;
 }
 
 function groupEvents(events: FormattedEvent[]) {

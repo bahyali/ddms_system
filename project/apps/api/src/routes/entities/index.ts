@@ -346,7 +346,6 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const partialData = validationResult.data;
-      console.log('Partial Data:', partialData);
       const relationUpdates = extractRelationInputs(
         fieldDefs,
         partialData,
@@ -404,6 +403,7 @@ const entitiesRoutes: FastifyPluginAsync = async (fastify) => {
           entityTypeId: entityType.id,
           entityTypeKey: entityType.key,
           changedKeys: Object.keys(partialData),
+          changes: partialData,
         },
       });
 
