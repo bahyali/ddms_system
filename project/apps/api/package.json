@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "start": "NODE_ENV=production tsx src/index.ts",
     "lint": "eslint src --ext .ts",
     "seed": "tsx src/scripts/seed.ts",
     "test": "tsx --test src/**/*.test.ts"

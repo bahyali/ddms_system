@@ -37,6 +37,7 @@ This monorepo hosts the backend API, web client, and shared libraries that make 
    export DATABASE_URL="postgresql://user:password@localhost:5432/ddms_db"
    ```
    The `drizzle-kit` CLI and the API server both read this value during startup.
+   When pointing at Supabase, replace it with the Supabase connection string (e.g. `postgresql://postgres:<password>@db.<project>.supabase.co:6543/postgres`).
 
 ## Running the Services
 - **Apply the latest database migrations** (requires `DATABASE_URL`):
@@ -138,6 +139,22 @@ Refer to `docs/seed-data.md` for expanded context on the dataset and performance
 - `tools/run.sh` – ensures dependencies are installed, then runs `pnpm run dev`.
 - `pnpm run lint` – runs lint tasks across all workspaces.
 - `pnpm run test` – executes available test suites (API routes, core utilities).
+
+## Cloud Deployment (AWS + Supabase)
+Infrastructure-as-code for deploying both the Fastify API and the Next.js web app to AWS (while using Supabase as the managed PostgreSQL instance) lives in `infra/aws`.
+
+1. Provision a Supabase project and retrieve the `DATABASE_URL` from the dashboard.
+2. Move into `infra/aws`, copy `terraform.tfvars.example` to `terraform.tfvars`, and fill in the project name, environment, AWS region, and Supabase connection string.
+3. Run `terraform init`, `terraform plan`, and `terraform apply` to create the VPC, Application Load Balancer (with path routing), ECS Fargate services, ECR repositories, and Secrets Manager entry that stores `DATABASE_URL`.
+4. Build and push the API and web images, then trigger ECS rollouts:
+   ```bash
+   ./tools/deploy/build-and-push.sh <region> <api_ecr_repo> <web_ecr_repo> [tag]
+   ./tools/deploy/rollout.sh <region> <cluster> <api-service> <web-service>
+   ```
+   The helper scripts wrap the `docker build/push` and `aws ecs update-service` commands for convenience.
+5. Update Supabase network rules (if enforced) so the AWS load balancer or VPC CIDR ranges can connect to the database.
+
+See `infra/aws/README.md` for environment details, Terraform outputs, and deployment tips.
 
 ## Troubleshooting
 - **Migrations fail with permission errors**: connect with a superuser or grant the role rights to create extensions/triggers.

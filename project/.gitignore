@@ -24,5 +24,11 @@ pnpm-debug.log*
 .env*.local
 .env
 
+# terraform state
+.terraform
+*.tfstate
+*.tfstate.*
+
 # typescript
 *.tsbuildinfo
+terraform.tfvars
