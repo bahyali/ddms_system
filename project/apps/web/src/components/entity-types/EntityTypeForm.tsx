@@ -45,7 +45,7 @@ export const EntityTypeForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="stack">
       <div className="field-group">
         <label htmlFor="key">Key</label>
         <input
@@ -82,9 +82,11 @@ export const EntityTypeForm = ({
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
-      <button type="submit" disabled={isLoading}>
-        {isLoading ? 'Saving...' : 'Save'}
-      </button>
+      <div className="row" style={{ justifyContent: 'flex-end' }}>
+        <button type="submit" className="button" disabled={isLoading}>
+          {isLoading ? 'Saving…' : 'Save changes'}
+        </button>
+      </div>
     </form>
   );
 };
