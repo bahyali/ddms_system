@@ -23,9 +23,10 @@ locals {
 }
 
 resource "aws_vpc" "main" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_support   = true
-  enable_dns_hostnames = true
+  cidr_block                       = var.vpc_cidr
+  assign_generated_ipv6_cidr_block = true
+  enable_dns_support               = true
+  enable_dns_hostnames             = true
 
   tags = {
     Name        = "${local.name_prefix}-vpc"
@@ -49,8 +50,10 @@ resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = each.value.cidr
   availability_zone = each.value.az
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.main.ipv6_cidr_block, 8, each.key)
 
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch         = true
+  assign_ipv6_address_on_creation = true
 
   tags = {
     Name        = "${local.name_prefix}-public-${each.value.az}"
@@ -76,6 +79,12 @@ resource "aws_route" "public_internet_access" {
   gateway_id             = aws_internet_gateway.igw.id
 }
 
+resource "aws_route" "public_internet_access_ipv6" {
+  route_table_id              = aws_route_table.public.id
+  destination_ipv6_cidr_block = "::/0"
+  gateway_id                  = aws_internet_gateway.igw.id
+}
+
 resource "aws_route_table_association" "public" {
   for_each       = aws_subnet.public
   subnet_id      = each.value.id
@@ -88,17 +97,11 @@ resource "aws_security_group" "alb" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
 
   tags = {
@@ -112,13 +115,6 @@ resource "aws_security_group" "service" {
   name        = "${local.name_prefix}-service"
   description = "Allow ALB to reach ECS tasks"
   vpc_id      = aws_vpc.main.id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 
   tags = {
     Name        = "${local.name_prefix}-service-sg"
@@ -142,13 +138,6 @@ resource "aws_security_group" "web" {
   description = "Allow ALB to reach the Next.js web tasks"
   vpc_id      = aws_vpc.main.id
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   tags = {
     Name        = "${local.name_prefix}-web-sg"
     Environment = var.environment
@@ -170,6 +159,7 @@ resource "aws_lb" "api" {
   name               = "${local.name_prefix}-alb"
   internal           = false
   load_balancer_type = "application"
+  ip_address_type    = "dualstack"
   security_groups    = [aws_security_group.alb.id]
   subnets            = [for subnet in aws_subnet.public : subnet.id]
 
@@ -421,10 +411,6 @@ resource "aws_ecs_task_definition" "api" {
         {
           name  = "PORT"
           value = tostring(var.container_port)
-        },
-        {
-          name  = "NODE_OPTIONS"
-          value = "--dns-result-order=ipv4first"
         }
       ]
       secrets = [
@@ -485,10 +471,6 @@ resource "aws_ecs_task_definition" "web" {
         {
           name  = "HOST"
           value = "0.0.0.0"
-        },
-        {
-          name  = "NODE_OPTIONS"
-          value = "--dns-result-order=ipv4first"
         },
         {
           name  = "NEXT_PUBLIC_API_BASE_URL"
