@@ -3,7 +3,7 @@ const isDev = process.env.NODE_ENV !== 'production';
 
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
+  // output: 'standalone',
   eslint: {
     // Lint in CI or pre-commit; skip during production builds to keep deployments unblocked.
     ignoreDuringBuilds: true,
