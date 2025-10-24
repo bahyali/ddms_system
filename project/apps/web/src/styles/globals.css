@@ -243,6 +243,44 @@ a {
   border-style: dashed;
 }
 
+.surface-card.records-toolbar {
+  padding: var(--space-4);
+  gap: var(--space-4);
+}
+
+.records-toolbar__section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.records-toolbar__section--single {
+  width: 100%;
+}
+
+.records-toolbar__text h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.records-toolbar__text .helper-text {
+  margin: 4px 0 0;
+}
+
+.records-toolbar__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.records-toolbar__panel {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-4);
+}
+
 .stack {
   display: flex;
   flex-direction: column;
@@ -310,6 +348,11 @@ button:disabled,
   color: var(--text-muted);
   padding: 6px 10px;
   box-shadow: none;
+}
+
+.button.stealth:disabled {
+  background: transparent;
+  color: var(--text-subtle);
 }
 
 .badge {

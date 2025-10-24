@@ -29,7 +29,6 @@ const EntityRecordsPage = () => {
     pageSize: 10,
   });
   const [filter, setFilter] = useState<Filter | null>(null);
-  const [savedViewsOpen, setSavedViewsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -181,66 +180,37 @@ const EntityRecordsPage = () => {
           </div>
         )}
 
-        <section className="surface-card">
-          <div className="row row-wrap" style={{ justifyContent: 'space-between' }}>
-            <div className="stack-sm">
-              <h3 style={{ margin: 0 }}>Saved views</h3>
+        <section className="surface-card records-toolbar stack-sm">
+          <div className="records-toolbar__section records-toolbar__section--single">
+            <div className="records-toolbar__text">
+              <h3>Filters</h3>
               <p className="helper-text">
-                Favorite your go-to combinations of filters and sorts. They stay synced for the team.
+                {filter
+                  ? 'Filter active. Open the builder to refine or clear it.'
+                  : 'Stack conditions across searchable fields to narrow results.'}
               </p>
             </div>
-            <div className="row">
+            <div className="records-toolbar__actions">
               <button
                 type="button"
-                className="button secondary"
-                onClick={() => setSavedViewsOpen((previous) => !previous)}
-              >
-                {savedViewsOpen ? 'Collapse' : 'Expand'}
-              </button>
-              <button type="button" className="button secondary" disabled>
-                Save current view
-              </button>
-            </div>
-          </div>
-          {savedViewsOpen ? (
-            <div className="empty-state" style={{ marginTop: 'var(--space-4)' }}>
-              <h3>No saved views yet</h3>
-              <p>Create a filter and we&apos;ll remember it for next time.</p>
-            </div>
-          ) : (
-            <p className="helper-text" style={{ marginTop: 'var(--space-3)' }}>
-              Expand to manage saved views once they&apos;re available.
-            </p>
-          )}
-        </section>
-
-        <section className="surface-card stack">
-          <div className="row row-wrap" style={{ justifyContent: 'space-between' }}>
-            <div className="stack-sm">
-              <h3 style={{ margin: 0 }}>Filters</h3>
-              <p className="helper-text">
-                Combine conditions across field types. Re-run frequently used filters via saved views.
-              </p>
-            </div>
-            <div className="row">
-              <button
-                type="button"
-                className="button secondary"
+                className="button stealth"
                 onClick={() => setFilter(null)}
+                disabled={!filter}
               >
-                Clear filters
+                Clear
               </button>
               <button
                 type="button"
                 className="button secondary"
                 onClick={() => setFiltersOpen((previous) => !previous)}
               >
-                {filtersOpen ? 'Collapse' : 'Expand'}
+                {filtersOpen ? 'Hide builder' : 'Open builder'}
               </button>
             </div>
           </div>
-          {filtersOpen ? (
-            <>
+
+          {filtersOpen && (
+            <div className="records-toolbar__panel stack-sm">
               {isLoadingFieldDefs && (
                 <p className="helper-text">Loading field definitions…</p>
               )}
@@ -257,13 +227,7 @@ const EntityRecordsPage = () => {
                   onApplyFilter={setFilter}
                 />
               )}
-            </>
-          ) : (
-            <p className="helper-text">
-              {filter
-                ? 'A filter is active. Expand to adjust or clear it.'
-                : 'Expand to configure filters for this entity.'}
-            </p>
+            </div>
           )}
         </section>
 
