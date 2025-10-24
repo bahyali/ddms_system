@@ -15,6 +15,7 @@ import authPlugin from './plugins/auth';
 import eventsRoutes from './routes/events';
 import indexerPlugin from './plugins/indexer';
 import indexesRoutes from './routes/indexes';
+import auditRoutes from './routes/audit';
 import { tenants } from '@ddms/db';
 
 const isMockAuthEnabled =
@@ -121,6 +122,7 @@ export async function buildServer() {
   await server.register(relationsRoutes, { prefix: '/api/v1' });
   await server.register(eventsRoutes, { prefix: '/api/v1/events' });
   await server.register(indexesRoutes, { prefix: '/api/v1' });
+  await server.register(auditRoutes, { prefix: '/api/v1/audit' });
 
   server.ready(err => {
     if (err) throw err;

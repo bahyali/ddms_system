@@ -82,13 +82,13 @@ export const AppLayout = ({
         { label: 'Indexes', href: '/ops/indexes' },
       ],
     },
-    {
-      label: 'Audit',
-      items: [
-        { label: 'Activity Log', disabled: true, badge: 'Soon' },
-        { label: 'Record Versions', disabled: true, badge: 'Soon' },
-      ],
-    },
+  {
+    label: 'Audit',
+    items: [
+      { label: 'Activity Log', href: '/audit/activity-log' },
+      { label: 'Record Versions', disabled: true, badge: 'Soon' },
+    ],
+  },
     {
       label: 'Settings',
       items: [

@@ -102,6 +102,13 @@ export interface paths {
      */
     get: operations["subscribeToEvents"];
   };
+  "/audit/activity-log": {
+    /**
+     * List Activity Events
+     * @description Returns recent audit log events for the tenant, ordered with the latest first.
+     */
+    get: operations["listActivityLog"];
+  };
 }
 
 export type webhooks = Record<string, never>;
@@ -271,6 +278,31 @@ export interface components {
       };
       /** @description The current version of the record being updated, for optimistic locking. */
       version: number;
+    };
+    ActivityCategory: "schema" | "record" | "governance" | "import" | "integration";
+    AuditLogEvent: {
+      id: number;
+      occurredAt: string;
+      action: string;
+      category: components["schemas"]["ActivityCategory"];
+      actorId?: string | null;
+      actorLabel?: string | null;
+      resourceType: string;
+      resourceId?: string | null;
+      meta: {
+        [key: string]: unknown;
+      };
+    };
+    ActivityLogSummary: {
+      totalEvents: number;
+      schemaEdits: number;
+      recordUpdates: number;
+      uniqueActors: number;
+      lastEventAt?: string | null;
+    };
+    ActivityLogResponse: {
+      events: components["schemas"]["AuditLogEvent"][];
+      summary: components["schemas"]["ActivityLogSummary"];
     };
     Relation: {
       /** Format: uuid */
@@ -836,6 +868,28 @@ export interface operations {
       200: {
         content: {
           "text/event-stream": unknown;
+        };
+      };
+    };
+  };
+  /**
+   * List Activity Events
+   * @description Returns recent audit log events for the tenant, ordered with the latest first.
+   */
+  listActivityLog: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+        type?: components["schemas"]["ActivityCategory"];
+        search?: string;
+      };
+    };
+    responses: {
+      /** @description A list of activity events. */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ActivityLogResponse"];
         };
       };
     };

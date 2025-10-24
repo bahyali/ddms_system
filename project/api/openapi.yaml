@@ -18,6 +18,8 @@ tags:
     description: 'Operations for real-time event streaming.'
   - name: Operations
     description: 'Operational endpoints for background jobs and maintenance.'
+  - name: Audit
+    description: 'Audit trails and activity events.'
 
 paths:
   /entity-types:
@@ -369,6 +371,45 @@ paths:
           description: 'SSE connection established.'
           content:
             text/event-stream: {}
+
+  /audit/activity-log:
+    get:
+      tags:
+        - Audit
+      summary: 'List Activity Events'
+      description: 'Returns recent audit log events for the tenant, ordered with the latest first.'
+      operationId: 'listActivityLog'
+      parameters:
+        - in: query
+          name: limit
+          description: 'Maximum number of events to return.'
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+        - in: query
+          name: cursor
+          description: 'Cursor for pagination, representing the last event identifier.'
+          schema:
+            type: string
+        - in: query
+          name: type
+          description: 'Filter events by category.'
+          schema:
+            $ref: '#/components/schemas/ActivityCategory'
+        - in: query
+          name: search
+          description: 'Search across action, resource, actor, and metadata.'
+          schema:
+            type: string
+            maxLength: 200
+      responses:
+        '200':
+          description: 'A list of activity events.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityLogResponse'
 
 components:
   parameters:
@@ -748,6 +789,84 @@ components:
       required:
         - data
         - version
+
+    ActivityCategory:
+      type: string
+      enum:
+        - schema
+        - record
+        - governance
+        - import
+        - integration
+
+    AuditLogEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        occurredAt:
+          type: string
+          format: date-time
+        action:
+          type: string
+        category:
+          $ref: '#/components/schemas/ActivityCategory'
+        actorId:
+          type: string
+          nullable: true
+        actorLabel:
+          type: string
+          nullable: true
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+          nullable: true
+        meta:
+          type: object
+          additionalProperties: true
+      required:
+        - id
+        - occurredAt
+        - action
+        - category
+        - resourceType
+        - meta
+
+    ActivityLogSummary:
+      type: object
+      properties:
+        totalEvents:
+          type: integer
+        schemaEdits:
+          type: integer
+        recordUpdates:
+          type: integer
+        uniqueActors:
+          type: integer
+        lastEventAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - totalEvents
+        - schemaEdits
+        - recordUpdates
+        - uniqueActors
+        - lastEventAt
+
+    ActivityLogResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLogEvent'
+        summary:
+          $ref: '#/components/schemas/ActivityLogSummary'
+      required:
+        - events
+        - summary
 
     # Relation Schemas
     Relation:
