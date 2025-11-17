@@ -1,6 +1,6 @@
 # Dynamic Data Management System Workspace
 
-This repository contains everything required for the Zentio challenge implementation of the Dynamic Data Management System (DDMS). The actual application code lives in a PNPM-based monorepo under `project/`, while supporting documentation and planning artifacts sit alongside it.
+This repository contains everything required for the implementation of the Dynamic Data Management System (DDMS). The actual application code lives in a PNPM-based monorepo under `project/`, while supporting documentation and planning artifacts sit alongside it.
 
 ## Repository Layout
 - `project/` – Fastify API, Next.js web client, shared packages, tooling, and infrastructure. See `project/README.md` for in-depth instructions, scripts, and workspace details.
